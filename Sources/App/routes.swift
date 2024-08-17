@@ -1,11 +1,7 @@
 import Vapor
 
-func routes(_ app: Application) throws {
-        app.get { req async in
-        "It works!"
-    }
-
-    app.get("hello") { req async -> String in
-        "Hello, world!"
-    }
+func routes(app: Application) throws {
+    try app.register(collection: WebhookController())
+    try app.register(collection: TelegramController())
+    try app.register(collection: ChatController())
 }
