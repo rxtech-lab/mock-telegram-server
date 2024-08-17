@@ -4,6 +4,10 @@ actor UpdateManager {
 
     private init() {}
 
+    func reset() {
+        updates = []
+    }
+
     func addUpdate(_ update: Message) {
         updates.append(update)
     }
@@ -23,11 +27,19 @@ actor ChatManager {
 
     private init() {}
 
+    func reset() {
+        chatId = 0
+        messageId = 0
+        messages = []
+    }
+
     func addMessage(_ message: Message) -> Message {
         var message = message
-        message.messageId = messageId
+        if message.messageId == nil {
+            message.messageId = messageId
+            messageId += 1
+        }
         messages.append(message)
-        messageId += 1
         return message
     }
 
@@ -39,6 +51,8 @@ actor ChatManager {
         guard let index = messages.firstIndex(where: { $0.messageId == id }) else {
             return
         }
-        messages[index] = message
+        var newMessage = message
+        newMessage.updateCount += 1
+        messages[index] = newMessage
     }
 }

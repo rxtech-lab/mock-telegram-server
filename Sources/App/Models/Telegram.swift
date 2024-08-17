@@ -4,10 +4,12 @@ import Vapor
 struct Update: Content {
     let updateId: Int
     let message: TelegramMessage?
+    let callbackQuery: CallbackQuery?
 
     enum CodingKeys: String, CodingKey {
         case updateId = "update_id"
         case message
+        case callbackQuery = "callback_query"
     }
 }
 
@@ -53,6 +55,7 @@ struct InlineKeyboardButton: Content {
 struct SendTelegramMessageRequest: Codable {
     let parseMode: ParseMode
     let chatId: Int
+    let messageId: Int?
     let text: String
     let replyMarkup: String?
 
@@ -66,6 +69,7 @@ struct SendTelegramMessageRequest: Codable {
         case chatId = "chat_id"
         case text
         case replyMarkup = "reply_markup"
+        case messageId = "message_id"
     }
 
     var parsedReplyMarkup: ReplyMarkup? {
@@ -85,6 +89,6 @@ struct SendTelegramMessageResponse: Content {
 
 extension SendTelegramMessageRequest {
     func toMessage() -> Message {
-        return Message(messageId: 0, text: text, replyMarkup: parsedReplyMarkup)
+        return Message(messageId: messageId, text: text, replyMarkup: parsedReplyMarkup, callbackQuery: nil)
     }
 }

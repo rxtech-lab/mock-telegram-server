@@ -293,6 +293,26 @@ struct TelegramChat: Codable {
     }
 }
 
+struct CallbackQuery: Content {
+    let id: String
+    let from: User
+    let message: TelegramMessage?
+    let inlineMessageId: String?
+    let chatInstance: String
+    let data: String?
+    let gameShortName: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case from
+        case message
+        case inlineMessageId = "inline_message_id"
+        case chatInstance = "chat_instance"
+        case data
+        case gameShortName = "game_short_name"
+    }
+}
+
 struct TelegramMessage: Content {
     let messageId: Int
     let messageThreadId: Int?

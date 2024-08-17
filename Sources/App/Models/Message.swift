@@ -19,7 +19,7 @@ struct SendMessageRequest: Content {
     let content: String
 
     func toMessage() -> Message {
-        return Message(messageId: 0, text: content)
+        return Message(messageId: nil, text: content)
     }
 }
 
@@ -35,4 +35,12 @@ struct GetMessageByIdResponse: Content {
 struct ListMessageResponse: Content {
     let messages: [Message]
     let count: Int
+}
+
+struct UpdateMessageByIdResponse: Content {
+    let message: Message
+}
+
+struct ClickOnMessageRequest: Content {
+    let text: String
 }

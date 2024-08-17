@@ -1,9 +1,10 @@
 import Vapor
 
 struct Message: Content {
-    var messageId: Int
+    var messageId: Int?
     var text: String?
     var replyMarkup: ReplyMarkup?
+    var callbackQuery: String?
 
     var updateCount: Int = 0
 
@@ -12,6 +13,7 @@ struct Message: Content {
         case text
         case updateCount = "update_count"
         case replyMarkup = "reply_markup"
+        case callbackQuery = "callback_query"
     }
 }
 
@@ -23,9 +25,25 @@ struct Chat: Content {
 // MARK: - Chat to Telegram Message
 
 extension Message {
-    func toTelegramMessage() -> TelegramMessage {
+    func toCallbackQuery() -> CallbackQuery {
+        return CallbackQuery(
+            id: UUID().uuidString,
+            from: User(id: 0, isBot: false, firstName: "John", lastName: "Doe", username: "johndoe", languageCode: "en"),
+            message: toTelegramMessage(fromCallbackQuery: true),
+            inlineMessageId: nil,
+            chatInstance: UUID().uuidString,
+            data: callbackQuery,
+            gameShortName: nil
+        )
+    }
+
+    func toTelegramMessage(fromCallbackQuery: Bool = false) -> TelegramMessage? {
+        if !fromCallbackQuery, callbackQuery != nil {
+            return nil
+        }
+
         return TelegramMessage(
-            messageId: messageId,
+            messageId: messageId!,
             messageThreadId: nil,
             from: nil,
             date: Int(Date().timeIntervalSince1970),
