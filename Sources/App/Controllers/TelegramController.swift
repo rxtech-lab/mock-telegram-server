@@ -1,3 +1,4 @@
+import AnyCodable
 import Foundation
 import Vapor
 
@@ -11,7 +12,9 @@ struct TelegramController: RouteCollection {
     func sendMessage(req: Request) async throws -> SendTelegramMessageResponse {
         let body = try req.content.decode(SendTelegramMessageRequest.self)
 
-        req.logger.notice("sendMessage called with message: \(body.text)")
+        req.logger.notice("sendMessage called with message")
+        _ = await ChatManager.shared.addMessage(body.toMessage())
+
         return SendTelegramMessageResponse(
             ok: true
         )

@@ -2,13 +2,16 @@ import Vapor
 
 struct Message: Content {
     var messageId: Int
-    let text: String?
+    var text: String?
+    var replyMarkup: ReplyMarkup?
+
     var updateCount: Int = 0
 
     enum CodingKeys: String, CodingKey {
         case messageId = "message_id"
         case text
         case updateCount = "update_count"
+        case replyMarkup = "reply_markup"
     }
 }
 
