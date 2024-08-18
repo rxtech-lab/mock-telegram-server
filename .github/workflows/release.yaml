@@ -6,6 +6,9 @@ on:
 
 jobs:
   build-and-release:
+    permissions:
+      contents: write
+      packages: write
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -13,19 +16,12 @@ jobs:
       uses: swift-actions/setup-swift@v2
     - name: Build project
       run: make build
-    - name: Get release
-      id: get_release
-      uses: bruceadams/get-release@v1.3.2
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
-      if: github.event_name == 'release'
     - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
+      uses: softprops/action-gh-release@v2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       if: github.event_name == 'release'
       with:
-        upload_url: ${{ steps.get_release.outputs.upload_url }}
-        asset_path: ../executables/mock-telegram-linux-x86_64
-        asset_name: mock-telegram-linux-x86_64
-        asset_content_type: application/octet-stream
+        files: |
+            ../executables/mock-telegram-linux-x86_64
+        
