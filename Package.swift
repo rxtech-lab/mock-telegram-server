@@ -12,6 +12,7 @@ let package = Package(
         // 🔵 Non-blocking, event-driven networking for Swift. Used for custom executors
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
         .package(url: "https://github.com/flight-school/anycodable.git", from: "0.6.7"),
+        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
     ],
     targets: [
         .executableTarget(
@@ -21,6 +22,7 @@ let package = Package(
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOPosix", package: "swift-nio"),
                 .product(name: "AnyCodable", package: "anycodable"),
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
             swiftSettings: swiftSettings
         ),
