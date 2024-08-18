@@ -1,3 +1,4 @@
+import AnyCodable
 @testable import App
 import XCTVapor
 
@@ -137,6 +138,44 @@ final class AppTests: XCTestCase {
             let response = try req.content.decode(GetTelegramUpdatesResponse.self)
             XCTAssertEqual(response.result.count, 0)
 
+        })
+    }
+
+    func testTelegramSendMessage() async throws {
+        let chatroomId = 3
+
+        try await app.test(.POST, "chatroom/\(chatroomId)/message", beforeRequest: {
+            req in
+            try req.content.encode(["type": "text", "content": "Hello, world!"])
+        }, afterResponse: { req async throws in
+            XCTAssert(req.status == .ok)
+            let response = try req.content.decode(SendMessageResponse.self)
+            XCTAssertEqual(response.chat_id, 0)
+            XCTAssertEqual(response.message_id, 0)
+            XCTAssert(req.status == .ok)
+        })
+
+        try await app.test(.POST, "webhook/chatroom/\(chatroomId)/abc/getUpdates", afterResponse: { req async throws in
+            XCTAssert(req.status == .ok)
+            let response = try req.content.decode(GetTelegramUpdatesResponse.self)
+            XCTAssertEqual(response.result.count, 1)
+            XCTAssertEqual(response.result[0].message?.text, "Hello, world!")
+        })
+
+        // respond to the message
+        try await app.test(.POST, "webhook/chatroom/\(chatroomId)/abc/sendMessage", beforeRequest: {
+            req in
+            try req.content.encode(SendTelegramMessageRequest(parseMode: .html, chatId: chatroomId, messageId: nil, text: "Some response", replyMarkup: nil))
+        }, afterResponse: { req async throws in
+            XCTAssert(req.status == .ok)
+        })
+
+        try await app.test(.GET, "chatroom/\(chatroomId)/message", afterResponse: {
+            res async throws in
+            let resp = try res.content.decode(ListMessageResponse.self)
+            XCTAssertEqual(resp.messages.count, 2)
+            XCTAssertEqual(resp.messages[0].messageId, 0)
+            XCTAssertEqual(resp.messages[1].messageId, 1)
         })
     }
 }
