@@ -12,16 +12,24 @@ BUILD_CONFIG = release
 # Output directory (change this to your desired output folder)
 OUT_DIR = ../executables
 
-# Get system architecture
+# Get system architecture and OS
 ARCH := $(shell uname -m)
 OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
+
+# Set Swift build flags
+SWIFT_BUILD_FLAGS = -c $(BUILD_CONFIG)
+
+# Add Linux-specific flags
+ifeq ($(OS),linux)
+    SWIFT_BUILD_FLAGS += --static-swift-stdlib -Xlinker -ljemalloc
+endif
 
 # Default target
 all: build install
 
 # Build the project
 build:
-	$(SWIFT) build -c $(BUILD_CONFIG)
+	$(SWIFT) build $(SWIFT_BUILD_FLAGS)
 	@mkdir -p $(OUT_DIR)
 	@echo "Copying $(PROJECT_NAME) to $(OUT_DIR) with architecture-specific name"
 	@cp -f .build/$(BUILD_CONFIG)/$(PROJECT_NAME) $(OUT_DIR)/$(EXECUTABLE_NAME)-$(OS)-$(ARCH)
@@ -29,7 +37,7 @@ build:
 
 # Install (copy) the executable to the output directory without architecture-specific name
 install:
-	$(SWIFT) build -c $(BUILD_CONFIG)
+	$(SWIFT) build $(SWIFT_BUILD_FLAGS)
 	@mkdir -p $(OUT_DIR)
 	@echo "Copying $(PROJECT_NAME) to $(OUT_DIR)"
 	@cp -f .build/$(BUILD_CONFIG)/$(PROJECT_NAME) $(OUT_DIR)/$(EXECUTABLE_NAME)
