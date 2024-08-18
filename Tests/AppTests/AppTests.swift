@@ -12,6 +12,8 @@ final class AppTests: XCTestCase {
     override func tearDown() async throws {
         try await app.asyncShutdown()
         app = nil
+        await UpdateManager.shared.reset()
+        await ChatManager.shared.reset()
     }
 
     func testAddAndGetMessage() async throws {
