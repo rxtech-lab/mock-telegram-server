@@ -29,6 +29,6 @@ jobs:
       - name: Resolve Swift package dependencies
         run: swift package resolve
       - name: Build
-        run: swift build -c release
+        run: make build
       - name: Run tests
         run: swift test
