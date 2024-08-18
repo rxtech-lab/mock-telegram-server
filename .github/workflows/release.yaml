@@ -9,19 +9,31 @@ jobs:
     permissions:
       contents: write
       packages: write
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Swift
-      uses: swift-actions/setup-swift@v2
-    - name: Build project
-      run: make build
-    - name: Upload Release Asset
-      uses: softprops/action-gh-release@v2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      if: github.event_name == 'release'
-      with:
-        files: |
+      - uses: actions/checkout@v4
+      - name: Set up Swift
+        uses: swift-actions/setup-swift@v2
+      - name: Build project
+        run: make build
+      - name: Upload Linux Release Asset
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # upload the built when os is ubuntu
+        if: github.event_name == 'release' && matrix.os == 'ubuntu-latest'
+        with:
+          files: |
             ../executables/mock-telegram-linux-x86_64
-        
+      - name: Upload Linux Release Asset
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # upload the built when os is macos
+        if: github.event_name == 'release' && matrix.os == 'macos-latest'
+        with:
+          files: |
+            ../executables/mock-telegram-darwin-arm64
