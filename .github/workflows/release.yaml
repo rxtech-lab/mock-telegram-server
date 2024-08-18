@@ -1,0 +1,31 @@
+name: Build and Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Swift
+      uses: swift-actions/setup-swift@v2
+    - name: Build project
+      run: make build
+    - name: Get release
+      id: get_release
+      uses: bruceadams/get-release@v1.3.2
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      if: github.event_name == 'release'
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      if: github.event_name == 'release'
+      with:
+        upload_url: ${{ steps.get_release.outputs.upload_url }}
+        asset_path: ../executables/mock-telegram-linux-x86_64
+        asset_name: mock-telegram-linux-x86_64
+        asset_content_type: application/octet-stream
