@@ -5,9 +5,8 @@ struct WebhookController: RouteCollection {
         routes.post("setWebhook", use: registerWebhook)
     }
 
-    func registerWebhook(req: Request) async throws -> RegisterWebhookResponse {
-        let body = try req.content.decode(RegisterWebhookRequest.self)
-
+    @Sendable
+    func registerWebhook(req _: Request) async throws -> RegisterWebhookResponse {
         return RegisterWebhookResponse()
     }
 }
