@@ -52,7 +52,7 @@ struct InlineKeyboardButton: Content {
     }
 }
 
-struct SendTelegramMessageRequest: Codable {
+struct SendTelegramMessageRequest: Content {
     let parseMode: ParseMode
     let chatId: Int
     let messageId: Int?
