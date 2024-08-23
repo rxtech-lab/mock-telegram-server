@@ -178,4 +178,32 @@ final class AppTests: XCTestCase {
             XCTAssertEqual(resp.messages[1].messageId, 1)
         })
     }
+
+    func testSendMessageWithCommands() async throws {
+        let chatroomId = 4
+
+        try await app.test(.POST, "chatroom/\(chatroomId)/message", beforeRequest: {
+            req in
+            try req.content.encode(["type": "text", "content": "Hello /start"])
+        }, afterResponse: { req async throws in
+            XCTAssert(req.status == .ok)
+            let response = try req.content.decode(SendMessageResponse.self)
+            XCTAssertEqual(response.chat_id, 0)
+            XCTAssertEqual(response.message_id, 0)
+            XCTAssert(req.status == .ok)
+        })
+
+        try await app.test(.POST, "webhook/chatroom/\(chatroomId)/abc/getUpdates", afterResponse: { req async throws in
+            XCTAssert(req.status == .ok)
+            let response = try req.content.decode(GetTelegramUpdatesResponse.self)
+            XCTAssertEqual(response.result.count, 1)
+            XCTAssertEqual(response.result[0].message?.text, "Hello /start")
+            XCTAssertEqual(response.result[0].message?.entities?.count, 1)
+
+            let entity = response.result[0].message?.entities?.first
+            XCTAssertEqual(entity?.type, MessageEntityType.botCommand)
+            XCTAssertEqual(entity?.offset, 6)
+            XCTAssertEqual(entity?.length, 5)
+        })
+    }
 }

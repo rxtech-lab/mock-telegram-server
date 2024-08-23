@@ -18,8 +18,56 @@ struct SendMessageRequest: Content {
      */
     let content: String
 
+    struct ParserResult {
+        let command: String
+        let offset: Int
+        let length: Int
+
+        var entity: MessageEntity {
+            MessageEntity(type: .botCommand, offset: offset, length: length, url: nil, user: nil, language: nil, customEmojiId: nil)
+        }
+    }
+
+    func parseCommand(_ input: String, startIndex: String.Index) -> ParserResult? {
+        guard let slashIndex = input[startIndex...].firstIndex(of: "/") else {
+            return nil
+        }
+
+        let commandStart = input.index(after: slashIndex)
+        let remainingString = input[commandStart...]
+
+        let commandEnd = remainingString.firstIndex(where: { $0.isWhitespace }) ?? remainingString.endIndex
+        let command = String(remainingString[..<commandEnd])
+
+        if command.isEmpty {
+            return nil
+        }
+
+        let offset = input.distance(from: input.startIndex, to: slashIndex)
+        let length = input.distance(from: slashIndex, to: commandEnd)
+
+        return ParserResult(command: command, offset: offset, length: length - 1)
+    }
+
+    func parseAllCommands(_ input: String) -> [ParserResult] {
+        var results: [ParserResult] = []
+        var currentIndex = input.startIndex
+
+        while currentIndex < input.endIndex {
+            if let result = parseCommand(input, startIndex: currentIndex) {
+                results.append(result)
+                currentIndex = input.index(input.startIndex, offsetBy: result.offset + result.length)
+            } else {
+                currentIndex = input.index(after: currentIndex)
+            }
+        }
+
+        return results
+    }
+
     func toMessage() -> Message {
-        return Message(messageId: nil, text: content)
+        let command: [SendMessageRequest.ParserResult] = parseAllCommands(content)
+        return Message(messageId: nil, text: content, entities: command.map { $0.entity })
     }
 }
 

@@ -5,6 +5,7 @@ struct Message: Content {
     var text: String?
     var replyMarkup: ReplyMarkup?
     var callbackQuery: String?
+    var entities: [MessageEntity]?
 
     var updateCount: Int = 0
 
@@ -14,6 +15,7 @@ struct Message: Content {
         case updateCount = "update_count"
         case replyMarkup = "reply_markup"
         case callbackQuery = "callback_query"
+        case entities
     }
 }
 
@@ -60,7 +62,7 @@ extension Message {
             mediaGroupId: nil,
             authorSignature: nil,
             text: text,
-            entities: nil,
+            entities: entities,
             captionEntities: nil,
             audio: nil,
             document: nil,
