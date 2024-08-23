@@ -203,7 +203,7 @@ final class AppTests: XCTestCase {
             let entity = response.result[0].message?.entities?.first
             XCTAssertEqual(entity?.type, MessageEntityType.botCommand)
             XCTAssertEqual(entity?.offset, 6)
-            XCTAssertEqual(entity?.length, 5)
+            XCTAssertEqual(entity?.length, 6)
         })
     }
 }

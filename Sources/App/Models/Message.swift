@@ -46,7 +46,7 @@ struct SendMessageRequest: Content {
         let offset = input.distance(from: input.startIndex, to: slashIndex)
         let length = input.distance(from: slashIndex, to: commandEnd)
 
-        return ParserResult(command: command, offset: offset, length: length - 1)
+        return ParserResult(command: command, offset: offset, length: length)
     }
 
     func parseAllCommands(_ input: String) -> [ParserResult] {
