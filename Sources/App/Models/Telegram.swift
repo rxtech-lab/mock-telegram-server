@@ -23,10 +23,15 @@ struct SetTelegramMyCommandsResponse: Content {
 }
 
 struct ReplyMarkup: Content {
-    let inlineKeyboard: [[InlineKeyboardButton]]
+    let inlineKeyboard: [[InlineKeyboardButton]]?
 
     enum CodingKeys: String, CodingKey {
         case inlineKeyboard = "inline_keyboard"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        inlineKeyboard = try container.decodeIfPresent([[InlineKeyboardButton]].self, forKey: .inlineKeyboard)
     }
 }
 
