@@ -93,7 +93,7 @@ struct ChatController: RouteCollection {
         let message = await ChatManager.shared.getMessageById(chatroomId: chatroomId, intId)
 
         // find the button with the text
-        let button = message?.replyMarkup?.inlineKeyboard.compactMap {
+        let button = message?.replyMarkup?.inlineKeyboard?.compactMap {
             button in
             button.first(where: { $0.text == body.text })
         }.first
