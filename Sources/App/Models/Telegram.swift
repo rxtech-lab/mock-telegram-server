@@ -52,7 +52,9 @@ struct InlineKeyboardButton: Content {
         }
 
         let data = Data(callbackData.utf8)
-        let json = try! JSONDecoder().decode([String: AnyCodable].self, from: data)
+        guard let json = try? JSONDecoder().decode([String: AnyCodable].self, from: data) else {
+            return [:]
+        }
         return json
     }
 }
@@ -83,7 +85,7 @@ struct SendTelegramMessageRequest: Content {
         }
 
         let data = Data(replyMarkup.utf8)
-        let json = try! JSONDecoder().decode(ReplyMarkup.self, from: data)
+        let json = try? JSONDecoder().decode(ReplyMarkup.self, from: data)
         return json
     }
 }
