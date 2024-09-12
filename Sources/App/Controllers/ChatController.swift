@@ -11,8 +11,11 @@ struct ChatController: RouteCollection {
         message.get(":id", use: getMessageById)
         message.get("", use: getMessages)
         message.post(":id", "click", use: clickOnMessage)
+        message.post("registerWebhook", use: registerWebhook)
 
         let chatroom = routes.grouped("chatroom")
+        chatroom.post(":chatroomId", "registerWebhook", use: registerWebhook)
+
         let chatroomMessage = chatroom.grouped(":chatroomId", "message")
 
         chatroomMessage.post("", use: sendMessage)
@@ -22,6 +25,14 @@ struct ChatController: RouteCollection {
 
         routes.post("reset", use: reset)
         routes.post("reset", ":chatroomId", use: reset)
+    }
+
+    @Sendable
+    func registerWebhook(req: Request) async throws -> HTTPStatus {
+        let chatroomId = req.parameters.get("chatroomId").flatMap { Int($0) } ?? DEFAULT_CHATROOM_ID
+        let body = try req.content.decode(RegisterWebhookRequest.self)
+        await ChatManager.shared.registerWebhook(chatroomId: chatroomId, url: body.url)
+        return .ok
     }
 
     /**
@@ -46,7 +57,12 @@ struct ChatController: RouteCollection {
 
         let body = try req.content.decode(SendMessageRequest.self)
         let message = await ChatManager.shared.addMessage(chatroomId: chatroomId, body.toMessage())
-        await UpdateManager.shared.addUpdate(chatroomId: chatroomId, message)
+
+        if let webhook = await ChatManager.shared.getWebhook(chatroomId: chatroomId) {
+            try await callWebhook(chatroomId: chatroomId, url: webhook, update: Update(updateId: 0, message: message.toTelegramMessage(), callbackQuery: message.toCallbackQuery()), with: req)
+        } else {
+            await UpdateManager.shared.addUpdate(chatroomId: chatroomId, message)
+        }
 
         return SendMessageResponse(
             message_id: message.messageId!,
@@ -103,7 +119,26 @@ struct ChatController: RouteCollection {
         }
 
         let newMessage = Message(messageId: intId, callbackQuery: callback.callbackData)
-        await UpdateManager.shared.addUpdate(chatroomId: chatroomId, newMessage)
+        // if user using webhook to receive updates
+        // send the update to the webhook
+        // otherwise, use long polling to get updates
+        if let webhook = await ChatManager.shared.getWebhook(chatroomId: chatroomId) {
+            try await callWebhook(chatroomId: chatroomId, url: webhook, update: Update(updateId: 0, message: newMessage.toTelegramMessage(), callbackQuery: newMessage.toCallbackQuery()), with: req)
+        } else {
+            await UpdateManager.shared.addUpdate(chatroomId: chatroomId, newMessage)
+        }
         return UpdateMessageByIdResponse(message: newMessage)
+    }
+}
+
+extension ChatController {
+    func callWebhook(chatroomId _: Int, url: String, update: Update, with req: Request) async throws {
+        let result = try await req.client.post(URI(string: url)) { req in
+            try req.content.encode(update)
+        }
+
+        if result.status != .ok {
+            throw Abort(.internalServerError, reason: "Webhook failed with status \(result.status)")
+        }
     }
 }

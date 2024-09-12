@@ -3,6 +3,7 @@ actor ChatManager {
     private(set) var chatId = 0
     private var messageId = 0
     private(set) var messages: [Int: [Message]] = [:]
+    private(set) var webhooks: [Int: String] = [:]
 
     private init() {}
 
@@ -13,6 +14,7 @@ actor ChatManager {
         chatId = 0
         messageId = 0
         messages = [:]
+        webhooks = [:]
     }
 
     /**
@@ -21,6 +23,19 @@ actor ChatManager {
      */
     func reset(chatroomId: Int) {
         messages[chatroomId] = []
+    }
+
+    /**
+     * Registers a webhook for a chatroom.
+     * - Parameter chatroomId: The chatroom ID.
+     * - Parameter url: The URL to register.
+     */
+    func registerWebhook(chatroomId: Int, url: String) {
+        webhooks[chatroomId] = url
+    }
+
+    func getWebhook(chatroomId: Int) -> String? {
+        return webhooks[chatroomId]
     }
 
     func addMessage(chatroomId: Int, _ message: Message) -> Message {
