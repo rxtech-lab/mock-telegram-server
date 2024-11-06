@@ -11,11 +11,18 @@ struct TelegramController: RouteCollection {
         webhook.post(":token", "setMyCommands", use: setMyCommands)
         webhook.post(":token", "sendMessage", use: sendMessage)
         webhook.post(":token", "editMessageText", use: editMessagetext)
+        webhook.post(":token", "close", use: close)
 
         chatroom.post(":token", "getUpdates", use: getUpdates)
         chatroom.post(":token", "setMyCommands", use: setMyCommands)
         chatroom.post(":token", "sendMessage", use: sendMessage)
         chatroom.post(":token", "editMessageText", use: editMessagetext)
+        chatroom.post(":token", "close", use: close)
+    }
+
+    @Sendable
+    func close(req _: Request) async throws -> CloseResponse {
+        return CloseResponse()
     }
 
     @Sendable

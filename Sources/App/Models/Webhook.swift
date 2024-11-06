@@ -5,3 +5,8 @@ struct RegisterWebhookRequest: Content {
 }
 
 struct RegisterWebhookResponse: Content {}
+
+struct CloseResponse: Content {
+    var ok: Bool = true
+    var result: Bool = true
+}
