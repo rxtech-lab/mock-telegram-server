@@ -2,6 +2,7 @@ import Logging
 import NIOCore
 import NIOPosix
 import Vapor
+import MockTelegramKit
 
 @main
 enum Entrypoint {
