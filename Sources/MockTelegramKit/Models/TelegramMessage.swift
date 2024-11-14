@@ -1,7 +1,7 @@
 import Foundation
 import Vapor
 
-public struct User: Content {
+public struct User: Content, Sendable {
     let id: Int
     let isBot: Bool
     let firstName: String
@@ -19,7 +19,7 @@ public struct User: Content {
     }
 }
 
-public struct MessageEntity: Content {
+public struct MessageEntity: Content, Sendable {
     let type: MessageEntityType
     let offset: Int
     let length: Int
@@ -34,7 +34,7 @@ public struct MessageEntity: Content {
     }
 }
 
-public enum MessageEntityType: String, Content {
+public enum MessageEntityType: String, Content, Sendable {
     case mention
     case hashtag
     case cashtag

@@ -1,6 +1,22 @@
+import Foundation
+
 #if canImport(Combine)
     import Combine
 #endif
+
+public enum WebhookError: LocalizedError {
+    case invalidURL
+    case webhookNotFound(UUID)
+
+    public var errorDescription: String? {
+        switch self {
+        case .invalidURL:
+            return "Invalid webhook URL. Your URL must be a valid url string."
+        case .webhookNotFound(let id):
+            return "Webhook with ID \(id) not found."
+        }
+    }
+}
 
 /**
  * Manages chat-related operations including message handling and webhook management.
@@ -22,7 +38,7 @@ public actor ChatManager {
 
     /// Storage for webhook URLs, keyed by chatroom ID
     /// Each chatroom can have one associated webhook URL
-    private(set) var webhooks: [Int: String] = [:]
+    private(set) var webhooks: [Int: Webhook] = [:]
 
     /// Private initializer to enforce singleton pattern
     private init() {}
@@ -40,7 +56,7 @@ public actor ChatManager {
         /// Listeners registered to receive webhook registration events.
         /// The value returned by the listener is a tuple containing the chat room ID and the webhook URL.
         public var registerWebhookListeners = PassthroughSubject<
-            (chatroomId: Int, url: String), Never
+            (chatroomId: Int, url: URL), Never
         >()
     #endif
 
@@ -65,26 +81,6 @@ public actor ChatManager {
         #if canImport(Combine)
             resetListeners.send(chatroomId)
         #endif
-    }
-
-    /// Registers a webhook URL for a specific chatroom.
-    /// If a webhook already exists for the chatroom, it will be overwritten.
-    ///
-    /// - Parameter chatroomId: The unique identifier of the chatroom
-    /// - Parameter url: The webhook URL to register
-    public func registerWebhook(chatroomId: Int, url: String) {
-        webhooks[chatroomId] = url
-        #if canImport(Combine)
-            registerWebhookListeners.send((chatroomId, url))
-        #endif
-    }
-
-    /// Retrieves the registered webhook URL for a specific chatroom.
-    ///
-    /// - Parameter chatroomId: The unique identifier of the chatroom
-    /// - Returns: The registered webhook URL if it exists, nil otherwise
-    public func getWebhook(chatroomId: Int) -> String? {
-        return webhooks[chatroomId]
     }
 
     /// Retrieves all chatrooms that have registered webhooks.
@@ -137,5 +133,66 @@ public actor ChatManager {
         var newMessage = message
         newMessage.updateCount += 1
         messages[chatroomId, default: []][index] = newMessage
+    }
+}
+
+extension ChatManager {
+    /// Registers a webhook URL for a specific chatroom.
+    /// If a webhook already exists for the chatroom, it will be overwritten.
+    ///
+    /// - Parameter chatroomId: The unique identifier of the chatroom
+    /// - Parameter url: The webhook URL to register
+    public func registerWebhook(chatroomId: Int, url: String) throws {
+        guard let url = URL(string: url) else {
+            throw WebhookError.invalidURL
+        }
+        webhooks[chatroomId] = Webhook(chatroomId: chatroomId, url: url)
+        #if canImport(Combine)
+            registerWebhookListeners.send((chatroomId, url))
+        #endif
+    }
+
+    /// Retrieves the registered webhook URL for a specific chatroom.
+    ///
+    /// - Parameter chatroomId: The unique identifier of the chatroom
+    /// - Returns: The registered webhook URL if it exists, nil otherwise
+    public func getWebhook(chatroomId: Int) -> Webhook? {
+        return webhooks[chatroomId]
+    }
+
+    /// Updates an existing webhook URL for a specific chatroom.
+    public func updateWebhook(webhook: Webhook) throws -> Webhook {
+        for (chatroomId, storedWebhook) in webhooks {
+            if storedWebhook.id == webhook.id {
+                webhooks[chatroomId] = webhook
+                #if canImport(Combine)
+                    registerWebhookListeners.send((chatroomId, webhook.url))
+                #endif
+                return webhook
+            }
+        }
+
+        throw WebhookError.webhookNotFound(webhook.id)
+    }
+
+    /// * Deletes a webhook registration for a specific chatroom.
+    /// * If the webhook doesn't exist, the operation is ignored.
+    /// *
+    /// * - Parameter id: The unique identifier of the webhook to delete
+    public func deleteWebhook(id: UUID) {
+        for (chatroomId, storedWebhook) in webhooks {
+            if storedWebhook.id == id {
+                webhooks[chatroomId] = nil
+                #if canImport(Combine)
+                    registerWebhookListeners.send((chatroomId, storedWebhook.url))
+                #endif
+                return
+            }
+        }
+    }
+
+    /// Retrieves all webhooks registered across all chatrooms.
+    public func getAllWebhooks() -> [Int: Webhook] {
+        return webhooks
     }
 }

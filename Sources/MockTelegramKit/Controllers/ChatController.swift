@@ -1,9 +1,7 @@
 import Vapor
 
-/**
- ChatController simulates the user's chat with the bot.
- Unlike the TelegramController, the ChatController does not interact with the Telegram API.
- */
+/// ChatController simulates the user's chat with the bot.
+/// Unlike the TelegramController, the ChatController does not interact with the Telegram API.
 struct ChatController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let message = routes.grouped("message")
@@ -31,7 +29,7 @@ struct ChatController: RouteCollection {
     func registerWebhook(req: Request) async throws -> HTTPStatus {
         let chatroomId = req.parameters.get("chatroomId").flatMap { Int($0) } ?? DEFAULT_CHATROOM_ID
         let body = try req.content.decode(RegisterWebhookRequest.self)
-        await ChatManager.shared.registerWebhook(chatroomId: chatroomId, url: body.url)
+        try await ChatManager.shared.registerWebhook(chatroomId: chatroomId, url: body.url)
         return .ok
     }
 
@@ -58,8 +56,12 @@ struct ChatController: RouteCollection {
         let body = try req.content.decode(SendMessageRequest.self)
         let message = await ChatManager.shared.addMessage(chatroomId: chatroomId, body.toMessage())
 
-        if let webhook = await ChatManager.shared.getWebhook(chatroomId: chatroomId) {
-            try await callWebhook(chatroomId: chatroomId, url: webhook, update: Update(updateId: 0, message: message.toTelegramMessage(), callbackQuery: message.toCallbackQuery()), with: req)
+        if var webhook = await ChatManager.shared.getWebhook(chatroomId: chatroomId) {
+            try await callWebhook(
+                chatroomId: chatroomId, webhook: &webhook,
+                update: Update(
+                    updateId: 0, message: message.toTelegramMessage(),
+                    callbackQuery: message.toCallbackQuery()), with: req)
         } else {
             await UpdateManager.shared.addUpdate(chatroomId: chatroomId, message)
         }
@@ -87,7 +89,8 @@ struct ChatController: RouteCollection {
         guard let intId = Int(id) else {
             throw Abort(.badRequest, reason: "Invalid id parameter, must be an integer")
         }
-        guard let message = await ChatManager.shared.getMessageById(chatroomId: chatroomId, intId) else {
+        guard let message = await ChatManager.shared.getMessageById(chatroomId: chatroomId, intId)
+        else {
             throw Abort(.notFound, reason: "Message with id \(intId) not found")
         }
         return GetMessageByIdResponse(message: message)
@@ -122,8 +125,12 @@ struct ChatController: RouteCollection {
         // if user using webhook to receive updates
         // send the update to the webhook
         // otherwise, use long polling to get updates
-        if let webhook = await ChatManager.shared.getWebhook(chatroomId: chatroomId) {
-            try await callWebhook(chatroomId: chatroomId, url: webhook, update: Update(updateId: 0, message: newMessage.toTelegramMessage(), callbackQuery: newMessage.toCallbackQuery()), with: req)
+        if var webhook = await ChatManager.shared.getWebhook(chatroomId: chatroomId) {
+            try await callWebhook(
+                chatroomId: chatroomId, webhook: &webhook,
+                update: Update(
+                    updateId: 0, message: newMessage.toTelegramMessage(),
+                    callbackQuery: newMessage.toCallbackQuery()), with: req)
         } else {
             await UpdateManager.shared.addUpdate(chatroomId: chatroomId, newMessage)
         }
@@ -132,12 +139,17 @@ struct ChatController: RouteCollection {
 }
 
 extension ChatController {
-    func callWebhook(chatroomId _: Int, url: String, update: Update, with req: Request) async throws {
-        let result = try await req.client.post(URI(string: url)) { req in
+    func callWebhook(chatroomId _: Int, webhook: inout Webhook, update: Update, with req: Request)
+        async throws
+    {
+        let result = try await req.client.post(URI(string: webhook.url.absoluteString)) { req in
             try req.content.encode(update)
         }
+        webhook.lastUpdate = Date()
 
         if result.status != .ok {
+            webhook.lastError = "Webhook failed with status \(result.status)"
+            try await ChatManager.shared.updateWebhook(webhook: webhook)
             throw Abort(.internalServerError, reason: "Webhook failed with status \(result.status)")
         }
     }
