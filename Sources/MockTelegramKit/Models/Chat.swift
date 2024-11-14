@@ -1,6 +1,6 @@
 import Vapor
 
-public struct Message: Content {
+public struct Message: Content, Sendable {
     var messageId: Int?
     var text: String?
     var replyMarkup: ReplyMarkup?
