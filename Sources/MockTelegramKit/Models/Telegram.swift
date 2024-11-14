@@ -1,7 +1,7 @@
 import AnyCodable
 import Vapor
 
-struct Update: Content {
+public struct Update: Content {
     let updateId: Int
     let message: TelegramMessage?
     let callbackQuery: CallbackQuery?
@@ -13,32 +13,37 @@ struct Update: Content {
     }
 }
 
-struct GetTelegramUpdatesResponse: Content {
+public struct GetTelegramUpdatesResponse: Content {
     let ok: Bool
     let result: [Update]
 }
 
-struct SetTelegramMyCommandsResponse: Content {
+public struct SetTelegramMyCommandsResponse: Content {
     let ok: Bool
 }
 
-struct ReplyMarkup: Content {
-    let inlineKeyboard: [[InlineKeyboardButton]]?
+public struct ReplyMarkup: Sendable, Content {
+    public let inlineKeyboard: [[InlineKeyboardButton]]?
 
     enum CodingKeys: String, CodingKey {
         case inlineKeyboard = "inline_keyboard"
     }
 
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        inlineKeyboard = try container.decodeIfPresent([[InlineKeyboardButton]].self, forKey: .inlineKeyboard)
+        inlineKeyboard = try container.decodeIfPresent(
+            [[InlineKeyboardButton]].self, forKey: .inlineKeyboard)
+    }
+
+    public init(inlineKeyboard: [[InlineKeyboardButton]]) {
+        self.inlineKeyboard = inlineKeyboard
     }
 }
 
-struct InlineKeyboardButton: Content {
-    let text: String
-    let callbackData: String?
-    let url: String?
+public struct InlineKeyboardButton: Sendable, Content {
+    public let text: String
+    public let callbackData: String?
+    public let url: String?
 
     enum CodingKeys: String, CodingKey {
         case text
@@ -57,9 +62,15 @@ struct InlineKeyboardButton: Content {
         }
         return json
     }
+
+    public init(text: String, callbackData: String, url: String? = nil) {
+        self.text = text
+        self.callbackData = callbackData
+        self.url = url
+    }
 }
 
-struct SendTelegramMessageRequest: Content {
+public struct SendTelegramMessageRequest: Content {
     let parseMode: ParseMode
     let chatId: Int
     let messageId: Int?
@@ -90,12 +101,14 @@ struct SendTelegramMessageRequest: Content {
     }
 }
 
-struct SendTelegramMessageResponse: Content {
+public struct SendTelegramMessageResponse: Content {
     let ok: Bool
 }
 
 extension SendTelegramMessageRequest {
-    func toMessage() -> Message {
-        return Message(messageId: messageId, text: text, replyMarkup: parsedReplyMarkup, callbackQuery: nil)
+    public func toMessage(userId: Int) -> Message {
+        return Message(
+            messageId: messageId, text: text, replyMarkup: parsedReplyMarkup, callbackQuery: nil,
+            userId: userId)
     }
 }

@@ -24,7 +24,9 @@ struct SendMessageRequest: Content {
         let length: Int
 
         var entity: MessageEntity {
-            MessageEntity(type: .botCommand, offset: offset, length: length, url: nil, user: nil, language: nil, customEmojiId: nil)
+            MessageEntity(
+                type: .botCommand, offset: offset, length: length, url: nil, user: nil,
+                language: nil, customEmojiId: nil)
         }
     }
 
@@ -36,7 +38,8 @@ struct SendMessageRequest: Content {
         let commandStart = input.index(after: slashIndex)
         let remainingString = input[commandStart...]
 
-        let commandEnd = remainingString.firstIndex(where: { $0.isWhitespace }) ?? remainingString.endIndex
+        let commandEnd =
+            remainingString.firstIndex(where: { $0.isWhitespace }) ?? remainingString.endIndex
         let command = String(remainingString[..<commandEnd])
 
         if command.isEmpty {
@@ -56,7 +59,8 @@ struct SendMessageRequest: Content {
         while currentIndex < input.endIndex {
             if let result = parseCommand(input, startIndex: currentIndex) {
                 results.append(result)
-                currentIndex = input.index(input.startIndex, offsetBy: result.offset + result.length)
+                currentIndex = input.index(
+                    input.startIndex, offsetBy: result.offset + result.length)
             } else {
                 currentIndex = input.index(after: currentIndex)
             }
@@ -65,9 +69,10 @@ struct SendMessageRequest: Content {
         return results
     }
 
-    func toMessage() -> Message {
+    func toMessage(userId: Int) -> Message {
         let command: [SendMessageRequest.ParserResult] = parseAllCommands(content)
-        return Message(messageId: nil, text: content, entities: command.map { $0.entity })
+        return Message(
+            messageId: nil, text: content, entities: command.map { $0.entity }, userId: userId)
     }
 }
 
