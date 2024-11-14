@@ -149,7 +149,7 @@ extension ChatController {
 
         if result.status != .ok {
             webhook.lastError = "Webhook failed with status \(result.status)"
-            await ChatManager.shared.updateWebhook(webhook: webhook)
+            try await ChatManager.shared.updateWebhook(webhook: webhook)
             throw Abort(.internalServerError, reason: "Webhook failed with status \(result.status)")
         }
     }
