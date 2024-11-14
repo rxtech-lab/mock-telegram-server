@@ -4,10 +4,10 @@ import PackageDescription
 let package = Package(
     name: "mock-telegram",
     platforms: [
-        .macOS(.v13),
+        .macOS(.v13)
     ],
     products: [
-        .library(name: "MockTelegramKit", targets: ["MockTelegramKit"]),
+        .library(name: "MockTelegramKit", targets: ["MockTelegramKit"])
     ],
     dependencies: [
         // 💧 A server-side Swift web framework.
@@ -31,7 +31,7 @@ let package = Package(
         .executableTarget(
             name: "App",
             dependencies: [
-                .target(name: "MockTelegramKit"),
+                .target(name: "MockTelegramKit")
             ],
             swiftSettings: swiftSettings
         ),
@@ -46,7 +46,9 @@ let package = Package(
     ]
 )
 
-var swiftSettings: [SwiftSetting] { [
-    .enableUpcomingFeature("DisableOutwardActorInference"),
-    .enableExperimentalFeature("StrictConcurrency"),
-] }
+var swiftSettings: [SwiftSetting] {
+    [
+        .enableUpcomingFeature("DisableOutwardActorInference"),
+        .enableExperimentalFeature("StrictConcurrency"),
+    ]
+}

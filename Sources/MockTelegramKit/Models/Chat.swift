@@ -1,6 +1,6 @@
 import Vapor
 
-struct Message: Content {
+public struct Message: Content {
     var messageId: Int?
     var text: String?
     var replyMarkup: ReplyMarkup?
@@ -19,7 +19,7 @@ struct Message: Content {
     }
 }
 
-struct Chat: Content {
+public struct Chat: Content {
     let id: Int
     let message: Message
 }
@@ -27,10 +27,12 @@ struct Chat: Content {
 // MARK: - Chat to Telegram Message
 
 extension Message {
-    func toCallbackQuery() -> CallbackQuery {
+    public func toCallbackQuery() -> CallbackQuery {
         return CallbackQuery(
             id: UUID().uuidString,
-            from: User(id: 0, isBot: false, firstName: "John", lastName: "Doe", username: "johndoe", languageCode: "en"),
+            from: User(
+                id: 0, isBot: false, firstName: "John", lastName: "Doe", username: "johndoe",
+                languageCode: "en"),
             message: toTelegramMessage(fromCallbackQuery: true),
             inlineMessageId: nil,
             chatInstance: UUID().uuidString,
@@ -39,7 +41,7 @@ extension Message {
         )
     }
 
-    func toTelegramMessage(fromCallbackQuery: Bool = false) -> TelegramMessage? {
+    public func toTelegramMessage(fromCallbackQuery: Bool = false) -> TelegramMessage? {
         if !fromCallbackQuery, callbackQuery != nil {
             return nil
         }
