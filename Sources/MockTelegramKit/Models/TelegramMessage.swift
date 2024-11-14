@@ -1,7 +1,7 @@
 import Foundation
 import Vapor
 
-struct User: Content {
+public struct User: Content {
     let id: Int
     let isBot: Bool
     let firstName: String
@@ -19,7 +19,7 @@ struct User: Content {
     }
 }
 
-struct MessageEntity: Content {
+public struct MessageEntity: Content {
     let type: MessageEntityType
     let offset: Int
     let length: Int
@@ -34,7 +34,7 @@ struct MessageEntity: Content {
     }
 }
 
-enum MessageEntityType: String, Content {
+public enum MessageEntityType: String, Content {
     case mention
     case hashtag
     case cashtag
@@ -54,7 +54,7 @@ enum MessageEntityType: String, Content {
     case customEmoji = "custom_emoji"
 }
 
-struct Audio: Content {
+public struct Audio: Content {
     let fileId: String
     let fileUniqueId: String
     let duration: Int
@@ -76,7 +76,7 @@ struct Audio: Content {
     }
 }
 
-struct Video: Content {
+public struct Video: Content {
     let fileId: String
     let fileUniqueId: String
     let width: Int
@@ -98,7 +98,7 @@ struct Video: Content {
     }
 }
 
-struct Voice: Content {
+public struct Voice: Content {
     let fileId: String
     let fileUniqueId: String
     let duration: Int
@@ -115,7 +115,7 @@ struct Voice: Content {
 }
 
 // PhotoSize struct (used in Audio and Video)
-struct PhotoSize: Content {
+public struct PhotoSize: Content {
     let fileId: String
     let fileUniqueId: String
     let width: Int
@@ -130,8 +130,6 @@ struct PhotoSize: Content {
         case fileSize = "file_size"
     }
 }
-
-import Foundation
 
 struct Document: Content {
     let fileId: String
@@ -151,7 +149,7 @@ struct Document: Content {
     }
 }
 
-struct Animation: Content {
+public struct Animation: Content {
     let fileId: String
     let fileUniqueId: String
     let width: Int
@@ -175,7 +173,7 @@ struct Animation: Content {
     }
 }
 
-struct Game: Content {
+public struct Game: Content {
     let title: String
     let description: String
     let photo: [PhotoSize]
@@ -193,7 +191,7 @@ struct Game: Content {
     }
 }
 
-struct Sticker: Content {
+public struct Sticker: Content {
     let fileId: String
     let fileUniqueId: String
     let type: StickerType
@@ -233,7 +231,7 @@ enum StickerType: String, Content {
     case customEmoji = "custom_emoji"
 }
 
-struct VideoNote: Content {
+public struct VideoNote: Content {
     let fileId: String
     let fileUniqueId: String
     let length: Int
@@ -253,7 +251,7 @@ struct VideoNote: Content {
 
 // Additional structs needed for the above
 
-struct MaskPosition: Codable {
+public struct MaskPosition: Codable {
     let point: String
     let xShift: Double
     let yShift: Double
@@ -267,7 +265,7 @@ struct MaskPosition: Codable {
     }
 }
 
-struct File: Codable {
+public struct File: Codable {
     let fileId: String
     let fileUniqueId: String
     let fileSize: Int?
@@ -281,7 +279,7 @@ struct File: Codable {
     }
 }
 
-struct TelegramChat: Codable {
+public struct TelegramChat: Codable {
     let id: Int
     let type: ChatType
 
@@ -293,7 +291,7 @@ struct TelegramChat: Codable {
     }
 }
 
-struct CallbackQuery: Content {
+public struct CallbackQuery: Content {
     let id: String
     let from: User
     let message: TelegramMessage?
@@ -313,7 +311,7 @@ struct CallbackQuery: Content {
     }
 }
 
-struct TelegramMessage: Content {
+public struct TelegramMessage: Content {
     let messageId: Int
     let messageThreadId: Int?
     let from: User?
