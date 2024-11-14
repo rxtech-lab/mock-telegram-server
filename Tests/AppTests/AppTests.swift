@@ -1,5 +1,6 @@
 import AnyCodable
 @testable import App
+@testable import MockTelegramKit
 import XCTVapor
 
 final class AppTests: XCTestCase {

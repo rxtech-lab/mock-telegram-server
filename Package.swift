@@ -6,6 +6,9 @@ let package = Package(
     platforms: [
         .macOS(.v13),
     ],
+    products: [
+        .library(name: "MockTelegramKit", targets: ["MockTelegramKit"]),
+    ],
     dependencies: [
         // 💧 A server-side Swift web framework.
         .package(url: "https://github.com/vapor/vapor.git", from: "4.99.3"),
@@ -15,14 +18,20 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
     ],
     targets: [
-        .executableTarget(
-            name: "App",
+        .target(
+            name: "MockTelegramKit",
             dependencies: [
                 .product(name: "Vapor", package: "vapor"),
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOPosix", package: "swift-nio"),
                 .product(name: "AnyCodable", package: "anycodable"),
-                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .executableTarget(
+            name: "App",
+            dependencies: [
+                .target(name: "MockTelegramKit"),
             ],
             swiftSettings: swiftSettings
         ),
