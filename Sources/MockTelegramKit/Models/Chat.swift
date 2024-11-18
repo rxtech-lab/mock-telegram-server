@@ -77,7 +77,8 @@ extension Message {
             messageId: messageId!,
             messageThreadId: nil,
             from: User(
-                id: userId, isBot: false, firstName: "John", lastName: "Doe", username: "johndoe",
+                id: userId, isBot: userId == Int.BotUserId ? true : false, firstName: "John",
+                lastName: "Doe", username: "johndoe",
                 languageCode: "en"),
             date: Int(Date().timeIntervalSince1970),
             chat: .init(id: 0, type: .privateChat),
