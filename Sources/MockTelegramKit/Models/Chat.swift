@@ -1,13 +1,14 @@
 import Vapor
 
 public struct Message: Content, Sendable {
-    var messageId: Int?
-    var text: String?
-    var replyMarkup: ReplyMarkup?
-    var callbackQuery: String?
-    var entities: [MessageEntity]?
+    public var messageId: Int?
+    public var text: String?
+    public var replyMarkup: ReplyMarkup?
+    public var callbackQuery: String?
+    public var entities: [MessageEntity]?
+    public var userId: Int
 
-    var updateCount: Int = 0
+    public var updateCount: Int = 0
 
     enum CodingKeys: String, CodingKey {
         case messageId = "message_id"
@@ -15,7 +16,33 @@ public struct Message: Content, Sendable {
         case updateCount = "update_count"
         case replyMarkup = "reply_markup"
         case callbackQuery = "callback_query"
+        case userId = "user_id"
         case entities
+    }
+
+    public init(
+        messageId: Int? = nil, text: String? = nil, replyMarkup: ReplyMarkup? = nil,
+        callbackQuery: String? = nil, entities: [MessageEntity]? = nil, userId: Int
+    ) {
+        self.messageId = messageId
+        self.text = text
+        self.replyMarkup = replyMarkup
+        self.callbackQuery = callbackQuery
+        self.entities = entities
+        self.userId = userId
+    }
+
+    public init(messageId: Int, text: String, userId: Int) {
+        self.text = text
+        self.userId = userId
+        self.messageId = messageId
+    }
+
+    public init(messageId: Int, text: String, userId: Int, replyMarkup: ReplyMarkup) {
+        self.text = text
+        self.userId = userId
+        self.messageId = messageId
+        self.replyMarkup = replyMarkup
     }
 }
 
@@ -49,7 +76,9 @@ extension Message {
         return TelegramMessage(
             messageId: messageId!,
             messageThreadId: nil,
-            from: nil,
+            from: User(
+                id: userId, isBot: false, firstName: "John", lastName: "Doe", username: "johndoe",
+                languageCode: "en"),
             date: Int(Date().timeIntervalSince1970),
             chat: .init(id: 0, type: .privateChat),
             senderChat: nil,
@@ -88,5 +117,13 @@ extension Message {
             migrateFromChatId: nil,
             hasMediaSpoiler: nil
         )
+    }
+}
+
+extension Message: Equatable {
+    public static func == (lhs: Message, rhs: Message) -> Bool {
+        lhs.messageId == rhs.messageId && lhs.text == rhs.text && lhs.replyMarkup == rhs.replyMarkup
+            && lhs.callbackQuery == rhs.callbackQuery && lhs.entities == rhs.entities
+            && lhs.userId == rhs.userId && lhs.updateCount == rhs.updateCount
     }
 }

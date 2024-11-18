@@ -1,13 +1,13 @@
 import Foundation
 import Vapor
 
-public struct User: Content, Sendable {
-    let id: Int
-    let isBot: Bool
-    let firstName: String
-    let lastName: String?
-    let username: String?
-    let languageCode: String?
+public struct User: Content, Sendable, Equatable {
+    public let id: Int
+    public let isBot: Bool
+    public let firstName: String
+    public let lastName: String?
+    public let username: String?
+    public let languageCode: String?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -19,14 +19,14 @@ public struct User: Content, Sendable {
     }
 }
 
-public struct MessageEntity: Content, Sendable {
-    let type: MessageEntityType
-    let offset: Int
-    let length: Int
-    let url: String?
-    let user: User?
-    let language: String?
-    let customEmojiId: String?
+public struct MessageEntity: Content, Sendable, Equatable {
+    public let type: MessageEntityType
+    public let offset: Int
+    public let length: Int
+    public let url: String?
+    public let user: User?
+    public let language: String?
+    public let customEmojiId: String?
 
     enum CodingKeys: String, CodingKey {
         case type, offset, length, url, user, language
@@ -55,14 +55,14 @@ public enum MessageEntityType: String, Content, Sendable {
 }
 
 public struct Audio: Content {
-    let fileId: String
-    let fileUniqueId: String
-    let duration: Int
-    let performer: String?
-    let title: String?
-    let mimeType: String?
-    let fileSize: Int?
-    let thumb: PhotoSize?
+    public let fileId: String
+    public let fileUniqueId: String
+    public let duration: Int
+    public let performer: String?
+    public let title: String?
+    public let mimeType: String?
+    public let fileSize: Int?
+    public let thumb: PhotoSize?
 
     enum CodingKeys: String, CodingKey {
         case fileId = "file_id"
@@ -77,14 +77,14 @@ public struct Audio: Content {
 }
 
 public struct Video: Content {
-    let fileId: String
-    let fileUniqueId: String
-    let width: Int
-    let height: Int
-    let duration: Int
-    let thumb: PhotoSize?
-    let mimeType: String?
-    let fileSize: Int?
+    public let fileId: String
+    public let fileUniqueId: String
+    public let width: Int
+    public let height: Int
+    public let duration: Int
+    public let thumb: PhotoSize?
+    public let mimeType: String?
+    public let fileSize: Int?
 
     enum CodingKeys: String, CodingKey {
         case fileId = "file_id"
@@ -99,11 +99,11 @@ public struct Video: Content {
 }
 
 public struct Voice: Content {
-    let fileId: String
-    let fileUniqueId: String
-    let duration: Int
-    let mimeType: String?
-    let fileSize: Int?
+    public let fileId: String
+    public let fileUniqueId: String
+    public let duration: Int
+    public let mimeType: String?
+    public let fileSize: Int?
 
     enum CodingKeys: String, CodingKey {
         case fileId = "file_id"
@@ -116,11 +116,11 @@ public struct Voice: Content {
 
 // PhotoSize struct (used in Audio and Video)
 public struct PhotoSize: Content {
-    let fileId: String
-    let fileUniqueId: String
-    let width: Int
-    let height: Int
-    let fileSize: Int?
+    public let fileId: String
+    public let fileUniqueId: String
+    public let width: Int
+    public let height: Int
+    public let fileSize: Int?
 
     enum CodingKeys: String, CodingKey {
         case fileId = "file_id"
@@ -131,13 +131,13 @@ public struct PhotoSize: Content {
     }
 }
 
-struct Document: Content {
-    let fileId: String
-    let fileUniqueId: String
-    let thumb: PhotoSize?
-    let fileName: String?
-    let mimeType: String?
-    let fileSize: Int?
+public struct Document: Content {
+    public let fileId: String
+    public let fileUniqueId: String
+    public let thumb: PhotoSize?
+    public let fileName: String?
+    public let mimeType: String?
+    public let fileSize: Int?
 
     enum CodingKeys: String, CodingKey {
         case fileId = "file_id"
@@ -150,15 +150,15 @@ struct Document: Content {
 }
 
 public struct Animation: Content {
-    let fileId: String
-    let fileUniqueId: String
-    let width: Int
-    let height: Int
-    let duration: Int
-    let thumb: PhotoSize?
-    let fileName: String?
-    let mimeType: String?
-    let fileSize: Int?
+    public let fileId: String
+    public let fileUniqueId: String
+    public let width: Int
+    public let height: Int
+    public let duration: Int
+    public let thumb: PhotoSize?
+    public let fileName: String?
+    public let mimeType: String?
+    public let fileSize: Int?
 
     enum CodingKeys: String, CodingKey {
         case fileId = "file_id"
@@ -174,12 +174,12 @@ public struct Animation: Content {
 }
 
 public struct Game: Content {
-    let title: String
-    let description: String
-    let photo: [PhotoSize]
-    let text: String?
-    let textEntities: [MessageEntity]?
-    let animation: Animation?
+    public let title: String
+    public let description: String
+    public let photo: [PhotoSize]
+    public let text: String?
+    public let textEntities: [MessageEntity]?
+    public let animation: Animation?
 
     enum CodingKeys: String, CodingKey {
         case title
@@ -192,20 +192,20 @@ public struct Game: Content {
 }
 
 public struct Sticker: Content {
-    let fileId: String
-    let fileUniqueId: String
-    let type: StickerType
-    let width: Int
-    let height: Int
-    let isAnimated: Bool
-    let isVideo: Bool
-    let thumb: PhotoSize?
-    let emoji: String?
-    let setName: String?
-    let premiumAnimation: File?
-    let maskPosition: MaskPosition?
-    let customEmojiId: String?
-    let fileSize: Int?
+    public let fileId: String
+    public let fileUniqueId: String
+    public let type: StickerType
+    public let width: Int
+    public let height: Int
+    public let isAnimated: Bool
+    public let isVideo: Bool
+    public let thumb: PhotoSize?
+    public let emoji: String?
+    public let setName: String?
+    public let premiumAnimation: File?
+    public let maskPosition: MaskPosition?
+    public let customEmojiId: String?
+    public let fileSize: Int?
 
     enum CodingKeys: String, CodingKey {
         case fileId = "file_id"
@@ -225,19 +225,19 @@ public struct Sticker: Content {
     }
 }
 
-enum StickerType: String, Content {
+public enum StickerType: String, Content {
     case regular
     case mask
     case customEmoji = "custom_emoji"
 }
 
 public struct VideoNote: Content {
-    let fileId: String
-    let fileUniqueId: String
-    let length: Int
-    let duration: Int
-    let thumb: PhotoSize?
-    let fileSize: Int?
+    public let fileId: String
+    public let fileUniqueId: String
+    public let length: Int
+    public let duration: Int
+    public let thumb: PhotoSize?
+    public let fileSize: Int?
 
     enum CodingKeys: String, CodingKey {
         case fileId = "file_id"
@@ -252,10 +252,10 @@ public struct VideoNote: Content {
 // Additional structs needed for the above
 
 public struct MaskPosition: Codable {
-    let point: String
-    let xShift: Double
-    let yShift: Double
-    let scale: Double
+    public let point: String
+    public let xShift: Double
+    public let yShift: Double
+    public let scale: Double
 
     enum CodingKeys: String, CodingKey {
         case point
@@ -266,10 +266,10 @@ public struct MaskPosition: Codable {
 }
 
 public struct File: Codable {
-    let fileId: String
-    let fileUniqueId: String
-    let fileSize: Int?
-    let filePath: String?
+    public let fileId: String
+    public let fileUniqueId: String
+    public let fileSize: Int?
+    public let filePath: String?
 
     enum CodingKeys: String, CodingKey {
         case fileId = "file_id"
@@ -280,10 +280,10 @@ public struct File: Codable {
 }
 
 public struct TelegramChat: Codable {
-    let id: Int
-    let type: ChatType
+    public let id: Int
+    public let type: ChatType
 
-    enum ChatType: String, Codable {
+    public enum ChatType: String, Codable {
         case privateChat = "private"
         case group
         case supergroup
@@ -292,13 +292,13 @@ public struct TelegramChat: Codable {
 }
 
 public struct CallbackQuery: Content {
-    let id: String
-    let from: User
-    let message: TelegramMessage?
-    let inlineMessageId: String?
-    let chatInstance: String
-    let data: String?
-    let gameShortName: String?
+    public let id: String
+    public let from: User
+    public let message: TelegramMessage?
+    public let inlineMessageId: String?
+    public let chatInstance: String
+    public let data: String?
+    public let gameShortName: String?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -312,46 +312,46 @@ public struct CallbackQuery: Content {
 }
 
 public struct TelegramMessage: Content {
-    let messageId: Int
-    let messageThreadId: Int?
-    let from: User?
-    let date: Int
-    let chat: TelegramChat
-    let senderChat: TelegramChat?
-    let forwardFrom: User?
-    let forwardFromChat: TelegramChat?
-    let forwardFromMessageId: Int?
-    let forwardSignature: String?
-    let forwardSenderName: String?
-    let forwardDate: Int?
-    let isTopicMessage: Bool?
-    let editDate: Int?
-    let mediaGroupId: String?
-    let authorSignature: String?
-    let text: String?
-    let entities: [MessageEntity]?
-    let captionEntities: [MessageEntity]?
-    let audio: Audio?
-    let document: Document?
-    let animation: Animation?
-    let game: Game?
-    let photo: [PhotoSize]?
-    let sticker: Sticker?
-    let video: Video?
-    let voice: Voice?
-    let videoNote: VideoNote?
-    let caption: String?
-    let newChatMembers: [User]?
-    let leftChatMember: User?
-    let newChatTitle: String?
-    let newChatPhoto: [PhotoSize]?
-    let deleteChatPhoto: Bool?
-    let groupChatCreated: Bool?
-    let supergroupChatCreated: Bool?
-    let channelChatCreated: Bool?
-    let migrateToChatId: Int64?
-    let migrateFromChatId: Int64?
-    let hasMediaSpoiler: Bool?
+    public let messageId: Int
+    public let messageThreadId: Int?
+    public let from: User?
+    public let date: Int
+    public let chat: TelegramChat
+    public let senderChat: TelegramChat?
+    public let forwardFrom: User?
+    public let forwardFromChat: TelegramChat?
+    public let forwardFromMessageId: Int?
+    public let forwardSignature: String?
+    public let forwardSenderName: String?
+    public let forwardDate: Int?
+    public let isTopicMessage: Bool?
+    public let editDate: Int?
+    public let mediaGroupId: String?
+    public let authorSignature: String?
+    public let text: String?
+    public let entities: [MessageEntity]?
+    public let captionEntities: [MessageEntity]?
+    public let audio: Audio?
+    public let document: Document?
+    public let animation: Animation?
+    public let game: Game?
+    public let photo: [PhotoSize]?
+    public let sticker: Sticker?
+    public let video: Video?
+    public let voice: Voice?
+    public let videoNote: VideoNote?
+    public let caption: String?
+    public let newChatMembers: [User]?
+    public let leftChatMember: User?
+    public let newChatTitle: String?
+    public let newChatPhoto: [PhotoSize]?
+    public let deleteChatPhoto: Bool?
+    public let groupChatCreated: Bool?
+    public let supergroupChatCreated: Bool?
+    public let channelChatCreated: Bool?
+    public let migrateToChatId: Int64?
+    public let migrateFromChatId: Int64?
+    public let hasMediaSpoiler: Bool?
 
     enum CodingKeys: String, CodingKey {
         case messageId = "message_id"
@@ -395,4 +395,79 @@ public struct TelegramMessage: Content {
         case migrateFromChatId = "migrate_from_chat_id"
         case hasMediaSpoiler = "has_media_spoiler"
     }
+}
+
+// MARK: - Equatable
+
+extension TelegramMessage: Equatable {
+    public static func == (lhs: TelegramMessage, rhs: TelegramMessage) -> Bool {
+        // Compare messageId for uniqueness
+        guard lhs.messageId == rhs.messageId else {
+            return false
+        }
+
+        // Compare text content, treating nil as equal to nil
+        switch (lhs.text, rhs.text) {
+        case (nil, nil):
+            return true
+        case let (leftText?, rightText?):
+            return leftText == rightText
+        default:
+            return false
+        }
+    }
+}
+
+// MARK: - Init
+
+extension TelegramMessage {
+    public init(text: String, userId: Int) {
+        messageId = Int.random(in: 1 ... 1000)
+        messageThreadId = nil
+        from = .init(
+            id: userId, isBot: false, firstName: "John", lastName: "Doe", username: "johndoe",
+            languageCode: "en")
+        date = Int(Date().timeIntervalSince1970)
+        chat = .init(id: 0, type: .privateChat)
+        senderChat = nil
+        forwardFrom = nil
+        forwardFromChat = nil
+        forwardFromMessageId = nil
+        forwardSignature = nil
+        forwardSenderName = nil
+        forwardDate = nil
+        isTopicMessage = nil
+        editDate = nil
+        mediaGroupId = nil
+        authorSignature = nil
+        self.text = text
+        entities = nil
+        captionEntities = nil
+        audio = nil
+        document = nil
+        animation = nil
+        game = nil
+        photo = nil
+        sticker = nil
+        video = nil
+        voice = nil
+        videoNote = nil
+        caption = nil
+        newChatMembers = nil
+        leftChatMember = nil
+        newChatTitle = nil
+        newChatPhoto = nil
+        deleteChatPhoto = nil
+        groupChatCreated = nil
+        supergroupChatCreated = nil
+        channelChatCreated = nil
+        migrateToChatId = nil
+        migrateFromChatId = nil
+        hasMediaSpoiler = nil
+    }
+}
+
+public extension Int {
+    static let UserID = 0
+    static let BotUserId = 1
 }

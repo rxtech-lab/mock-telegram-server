@@ -3,6 +3,9 @@ import Foundation
 #if canImport(Combine)
     import Combine
 #endif
+#if canImport(FoundationNetworking)
+    import FoundationNetworking
+#endif
 
 public enum WebhookError: LocalizedError {
     case invalidURL
@@ -12,10 +15,49 @@ public enum WebhookError: LocalizedError {
         switch self {
         case .invalidURL:
             return "Invalid webhook URL. Your URL must be a valid url string."
-        case .webhookNotFound(let id):
+        case let .webhookNotFound(id):
             return "Webhook with ID \(id) not found."
         }
     }
+}
+
+func callWebhook(chatroomId _: Int, webhook: inout Webhook, update: Update) async throws {
+    #if os(macOS)
+        var request = URLRequest(url: webhook.url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        // Encode the update data
+        let jsonData = try JSONEncoder().encode(update)
+        request.httpBody = jsonData
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            guard let httpResponse = response as? HTTPURLResponse else {
+                webhook.lastError = "Webhook failed with status \(response)"
+                webhook.lastUpdate = Date()
+                webhook.isActive = false
+                throw URLError(.badServerResponse)
+            }
+
+            guard httpResponse.statusCode == 200 else {
+                webhook.lastError = "Webhook failed with status \(httpResponse.statusCode)"
+                webhook.lastUpdate = Date()
+                webhook.isActive = false
+                throw URLError(.badServerResponse)
+            }
+
+            webhook.lastUpdate = Date()
+            webhook.lastError = nil
+            webhook.isActive = true
+        } catch let error {
+            webhook.lastError = "Webhook failed with error \(error)"
+            webhook.lastUpdate = Date()
+            webhook.isActive = false
+            throw error
+        }
+    #endif
 }
 
 /**
@@ -58,6 +100,8 @@ public actor ChatManager {
         public var registerWebhookListeners = PassthroughSubject<
             (chatroomId: Int, url: URL), Never
         >()
+
+        public var chatroomListeners = PassthroughSubject<Int, Never>()
     #endif
 
     /// Resets the entire chat manager state to initial values.
@@ -83,12 +127,6 @@ public actor ChatManager {
         #endif
     }
 
-    /// Retrieves all chatrooms that have registered webhooks.
-    /// - Returns: An array of chatroom IDs with registered webhooks
-    public func getAllChatrooms() -> [Int] {
-        return Array(messages.keys)
-    }
-
     /// Adds a new message to a specific chatroom.
     /// If the message doesn't have an ID, assigns a new unique ID.
     ///
@@ -108,15 +146,6 @@ public actor ChatManager {
         return message
     }
 
-    /// Retrieves a specific message from a chatroom by its ID.
-    ///
-    /// - Parameter chatroomId: The unique identifier of the chatroom
-    /// - Parameter id: The unique identifier of the message
-    /// - Returns: The message if found, nil otherwise
-    public func getMessageById(chatroomId: Int, _ id: Int) -> Message? {
-        return messages[chatroomId, default: []].first { $0.messageId == id }
-    }
-
     /// Updates an existing message in a chatroom.
     /// Increments the update count of the message.
     /// If the message doesn't exist, the operation is ignored.
@@ -133,8 +162,13 @@ public actor ChatManager {
         var newMessage = message
         newMessage.updateCount += 1
         messages[chatroomId, default: []][index] = newMessage
+        #if canImport(Combine)
+            messageListeners.send((chatroomId, newMessage))
+        #endif
     }
 }
+
+// MARK: - Webhook Management
 
 extension ChatManager {
     /// Registers a webhook URL for a specific chatroom.
@@ -195,4 +229,83 @@ extension ChatManager {
     public func getAllWebhooks() -> [Int: Webhook] {
         return webhooks
     }
+}
+
+// MARK: - Message Model
+
+extension ChatManager {
+    /// Retrieves all chatrooms that have registered webhooks.
+    /// - Returns: An array of chatroom IDs with registered webhooks
+    public func getAllChatrooms() -> [Int] {
+        return Array(messages.keys)
+    }
+
+    public func sendMessage(chatroomId: Int, messageRequest: SendMessageRequest) async -> Message {
+        var message = messageRequest.toMessage(userId: .UserID)
+        message = addMessage(chatroomId: chatroomId, message)
+        #if os(macOS)
+            if var webhook = webhooks[chatroomId] {
+                try? await callWebhook(
+                    chatroomId: chatroomId, webhook: &webhook,
+                    update: Update(
+                        updateId: 0, message: message.toTelegramMessage(),
+                        callbackQuery: message.toCallbackQuery()))
+                webhooks[chatroomId] = webhook
+                registerWebhookListeners.send((chatroomId, webhook.url))
+            }
+        #endif
+        return message
+    }
+
+    public func createChatroom() -> Int {
+        chatId += 1
+        messages[chatId] = []
+        #if canImport(Combine)
+            chatroomListeners.send(chatId)
+        #endif
+        return chatId
+    }
+
+    public func deleteChatroom(chatroomId: Int) {
+        messages[chatroomId] = nil
+        #if canImport(Combine)
+            chatroomListeners.send(chatroomId)
+            if let webhook = webhooks[chatroomId] {
+                deleteWebhook(id: webhook.id)
+            }
+        #endif
+    }
+
+    /// Retrieves a specific message from a chatroom by its ID.
+    ///
+    /// - Parameter chatroomId: The unique identifier of the chatroom
+    /// - Parameter id: The unique identifier of the message
+    /// - Returns: The message if found, nil otherwise
+    public func getMessageById(chatroomId: Int, _ id: Int) -> Message? {
+        return messages[chatroomId, default: []].first { $0.messageId == id }
+    }
+
+    public func getMessagesByChatroom(chatroomId: Int) -> [Message] {
+        return messages[chatroomId, default: []]
+    }
+
+    #if os(macOS)
+        public func clickOnMessageButton(
+            chatroomId: Int, message: Message, button: InlineKeyboardButton
+        )
+        async {
+            let newMessage = Message(
+                messageId: message.messageId, callbackQuery: button.callbackData, userId: message.userId
+            )
+            if var webhook = webhooks[chatroomId] {
+                try? await callWebhook(
+                    chatroomId: chatroomId, webhook: &webhook,
+                    update: Update(
+                        updateId: 0, message: newMessage.toTelegramMessage(),
+                        callbackQuery: newMessage.toCallbackQuery()))
+                webhooks[chatroomId] = webhook
+                registerWebhookListeners.send((chatroomId, webhook.url))
+            }
+        }
+    #endif
 }

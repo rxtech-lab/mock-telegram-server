@@ -36,6 +36,13 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
         .testTarget(
+            name: "MockTelegramKitTests",
+            dependencies: [
+                .target(name: "MockTelegramKit")
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .testTarget(
             name: "AppTests",
             dependencies: [
                 .target(name: "App"),
