@@ -88,7 +88,7 @@ public actor ChatManager {
     #if canImport(Combine)
         /// Listenrs registered to receive updates when a new message is added
         public var messageListeners = PassthroughSubject<
-            (charoomId: Int, message: Message), Never
+            (charoomId: Int, message: Message?), Never
         >()
 
         /// Listeners registered to receive reset events.
@@ -124,6 +124,7 @@ public actor ChatManager {
         messages[chatroomId] = []
         #if canImport(Combine)
             resetListeners.send(chatroomId)
+            messageListeners.send((chatroomId, nil))
         #endif
     }
 
@@ -141,6 +142,7 @@ public actor ChatManager {
         }
         messages[chatroomId, default: []].append(message)
         #if canImport(Combine)
+            chatroomListeners.send(chatroomId)
             messageListeners.send((chatroomId, message))
         #endif
         return message
@@ -160,7 +162,7 @@ public actor ChatManager {
             return
         }
         var newMessage = message
-        newMessage.updateCount += 1
+        newMessage.updateCount += messages[chatroomId, default: []][index].updateCount + 1
         messages[chatroomId, default: []][index] = newMessage
         #if canImport(Combine)
             messageListeners.send((chatroomId, newMessage))
@@ -295,7 +297,7 @@ extension ChatManager {
         )
         async {
             let newMessage = Message(
-                messageId: message.messageId, callbackQuery: button.callbackData, userId: message.userId
+                messageId: message.messageId, text: message.text, callbackQuery: button.callbackData, userId: message.userId
             )
             if var webhook = webhooks[chatroomId] {
                 try? await callWebhook(
