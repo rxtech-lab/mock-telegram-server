@@ -55,7 +55,7 @@ struct ChatController: RouteCollection {
 
         let body = try req.content.decode(SendMessageRequest.self)
         let message = await ChatManager.shared.addMessage(
-            chatroomId: chatroomId, body.toMessage(userId: TelegramMessage.UserID))
+            chatroomId: chatroomId, body.toMessage(userId: .UserID))
 
         if var webhook = await ChatManager.shared.getWebhook(chatroomId: chatroomId) {
             try await callWebhook(
@@ -63,6 +63,7 @@ struct ChatController: RouteCollection {
                 update: Update(
                     updateId: 0, message: message.toTelegramMessage(),
                     callbackQuery: message.toCallbackQuery()), with: req)
+            _ = try await ChatManager.shared.updateWebhook(webhook: webhook)
         } else {
             await UpdateManager.shared.addUpdate(chatroomId: chatroomId, message)
         }
@@ -133,6 +134,8 @@ struct ChatController: RouteCollection {
                 update: Update(
                     updateId: 0, message: newMessage.toTelegramMessage(),
                     callbackQuery: newMessage.toCallbackQuery()), with: req)
+
+            _ = try await ChatManager.shared.updateWebhook(webhook: webhook)
         } else {
             await UpdateManager.shared.addUpdate(chatroomId: chatroomId, newMessage)
         }
@@ -142,8 +145,7 @@ struct ChatController: RouteCollection {
 
 extension ChatController {
     func callWebhook(chatroomId _: Int, webhook: inout Webhook, update: Update, with req: Request)
-        async throws
-    {
+    async throws {
         let result = try await req.client.post(URI(string: webhook.url.absoluteString)) { req in
             try req.content.encode(update)
         }

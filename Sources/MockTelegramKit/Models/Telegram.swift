@@ -22,7 +22,7 @@ public struct SetTelegramMyCommandsResponse: Content {
     let ok: Bool
 }
 
-public struct ReplyMarkup: Sendable, Content {
+public struct ReplyMarkup: Sendable, Content, Equatable {
     public let inlineKeyboard: [[InlineKeyboardButton]]?
 
     enum CodingKeys: String, CodingKey {
@@ -40,7 +40,7 @@ public struct ReplyMarkup: Sendable, Content {
     }
 }
 
-public struct InlineKeyboardButton: Sendable, Content {
+public struct InlineKeyboardButton: Sendable, Content, Hashable {
     public let text: String
     public let callbackData: String?
     public let url: String?

@@ -32,7 +32,7 @@ struct TelegramController: RouteCollection {
 
         req.logger.notice("sendMessage called with message")
         _ = await ChatManager.shared.addMessage(
-            chatroomId: chatroomId, body.toMessage(userId: TelegramMessage.BotUserId))
+            chatroomId: chatroomId, body.toMessage(userId: .BotUserId))
 
         return SendTelegramMessageResponse(
             ok: true
@@ -45,10 +45,10 @@ struct TelegramController: RouteCollection {
         let body = try req.content.decode(SendTelegramMessageRequest.self)
 
         req.logger.notice("editMessageText called with message")
-        let message = body.toMessage(userId: TelegramMessage.BotUserId)
+        let message = body.toMessage(userId: .BotUserId)
         _ = await ChatManager.shared.updateMessageById(
             chatroomId: chatroomId, id: message.messageId!,
-            message: body.toMessage(userId: TelegramMessage.BotUserId))
+            message: body.toMessage(userId: .BotUserId))
 
         return SendTelegramMessageResponse(
             ok: true

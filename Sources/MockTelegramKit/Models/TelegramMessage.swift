@@ -1,7 +1,7 @@
 import Foundation
 import Vapor
 
-public struct User: Content, Sendable {
+public struct User: Content, Sendable, Equatable {
     public let id: Int
     public let isBot: Bool
     public let firstName: String
@@ -19,7 +19,7 @@ public struct User: Content, Sendable {
     }
 }
 
-public struct MessageEntity: Content, Sendable {
+public struct MessageEntity: Content, Sendable, Equatable {
     public let type: MessageEntityType
     public let offset: Int
     public let length: Int
@@ -312,9 +312,6 @@ public struct CallbackQuery: Content {
 }
 
 public struct TelegramMessage: Content {
-    public static let UserID = 0
-    public static let BotUserId = 1
-
     public let messageId: Int
     public let messageThreadId: Int?
     public let from: User?
@@ -400,7 +397,8 @@ public struct TelegramMessage: Content {
     }
 }
 
-//MARK: - Equatable
+// MARK: - Equatable
+
 extension TelegramMessage: Equatable {
     public static func == (lhs: TelegramMessage, rhs: TelegramMessage) -> Bool {
         // Compare messageId for uniqueness
@@ -420,51 +418,56 @@ extension TelegramMessage: Equatable {
     }
 }
 
-//MARK: - Init
-extension TelegramMessage {
+// MARK: - Init
 
+extension TelegramMessage {
     public init(text: String, userId: Int) {
-        self.messageId = Int.random(in: 1...1000)
-        self.messageThreadId = nil
-        self.from = .init(
+        messageId = Int.random(in: 1 ... 1000)
+        messageThreadId = nil
+        from = .init(
             id: userId, isBot: false, firstName: "John", lastName: "Doe", username: "johndoe",
             languageCode: "en")
-        self.date = Int(Date().timeIntervalSince1970)
-        self.chat = .init(id: 0, type: .privateChat)
-        self.senderChat = nil
-        self.forwardFrom = nil
-        self.forwardFromChat = nil
-        self.forwardFromMessageId = nil
-        self.forwardSignature = nil
-        self.forwardSenderName = nil
-        self.forwardDate = nil
-        self.isTopicMessage = nil
-        self.editDate = nil
-        self.mediaGroupId = nil
-        self.authorSignature = nil
+        date = Int(Date().timeIntervalSince1970)
+        chat = .init(id: 0, type: .privateChat)
+        senderChat = nil
+        forwardFrom = nil
+        forwardFromChat = nil
+        forwardFromMessageId = nil
+        forwardSignature = nil
+        forwardSenderName = nil
+        forwardDate = nil
+        isTopicMessage = nil
+        editDate = nil
+        mediaGroupId = nil
+        authorSignature = nil
         self.text = text
-        self.entities = nil
-        self.captionEntities = nil
-        self.audio = nil
-        self.document = nil
-        self.animation = nil
-        self.game = nil
-        self.photo = nil
-        self.sticker = nil
-        self.video = nil
-        self.voice = nil
-        self.videoNote = nil
-        self.caption = nil
-        self.newChatMembers = nil
-        self.leftChatMember = nil
-        self.newChatTitle = nil
-        self.newChatPhoto = nil
-        self.deleteChatPhoto = nil
-        self.groupChatCreated = nil
-        self.supergroupChatCreated = nil
-        self.channelChatCreated = nil
-        self.migrateToChatId = nil
-        self.migrateFromChatId = nil
-        self.hasMediaSpoiler = nil
+        entities = nil
+        captionEntities = nil
+        audio = nil
+        document = nil
+        animation = nil
+        game = nil
+        photo = nil
+        sticker = nil
+        video = nil
+        voice = nil
+        videoNote = nil
+        caption = nil
+        newChatMembers = nil
+        leftChatMember = nil
+        newChatTitle = nil
+        newChatPhoto = nil
+        deleteChatPhoto = nil
+        groupChatCreated = nil
+        supergroupChatCreated = nil
+        channelChatCreated = nil
+        migrateToChatId = nil
+        migrateFromChatId = nil
+        hasMediaSpoiler = nil
     }
+}
+
+public extension Int {
+    static let UserID = 0
+    static let BotUserId = 1
 }

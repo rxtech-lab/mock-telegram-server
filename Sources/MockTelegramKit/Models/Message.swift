@@ -1,6 +1,6 @@
 import Vapor
 
-enum MessageType: String, Content {
+public enum MessageType: String, Content {
     /**
      * Text message. Simulates a user pressing the Enter key and sending a message.
      */
@@ -11,12 +11,12 @@ enum MessageType: String, Content {
     case callback
 }
 
-struct SendMessageRequest: Content {
-    let type: MessageType
+public struct SendMessageRequest: Content {
+    public let type: MessageType
     /**
      * The message text. Could be a command, a question, or any other text.
      */
-    let content: String
+    public let content: String
 
     struct ParserResult {
         let command: String
@@ -73,6 +73,11 @@ struct SendMessageRequest: Content {
         let command: [SendMessageRequest.ParserResult] = parseAllCommands(content)
         return Message(
             messageId: nil, text: content, entities: command.map { $0.entity }, userId: userId)
+    }
+
+    public init(type: MessageType, content: String) {
+        self.type = type
+        self.content = content
     }
 }
 

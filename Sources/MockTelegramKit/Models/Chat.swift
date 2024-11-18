@@ -122,6 +122,8 @@ extension Message {
 
 extension Message: Equatable {
     public static func == (lhs: Message, rhs: Message) -> Bool {
-        lhs.messageId == rhs.messageId
+        lhs.messageId == rhs.messageId && lhs.text == rhs.text && lhs.replyMarkup == rhs.replyMarkup
+            && lhs.callbackQuery == rhs.callbackQuery && lhs.entities == rhs.entities
+            && lhs.userId == rhs.userId && lhs.updateCount == rhs.updateCount
     }
 }
