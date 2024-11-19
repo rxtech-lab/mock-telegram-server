@@ -11,7 +11,7 @@ struct CloseResponse: Content {
     var result: Bool = true
 }
 
-public struct Webhook: Identifiable, Sendable {
+public struct Webhook: Identifiable, Sendable, Codable, Hashable {
     public let id: UUID
     public let url: URL
     public let chatroomId: Int
