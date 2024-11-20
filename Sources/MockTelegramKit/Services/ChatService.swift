@@ -74,11 +74,23 @@ public actor ChatManager {
 
     /// Storage for messages, keyed by chatroom ID
     /// The value is an array of Message objects for each chatroom
-    private(set) var messages: [Int: [Message]] = [:]
+    private(set) var messages: [Int: [Message]] = [:] {
+        didSet {
+            #if canImport(Combine)
+                messageListeners.send()
+            #endif
+        }
+    }
 
     /// Storage for webhook URLs, keyed by chatroom ID
     /// Each chatroom can have one associated webhook URL
-    private(set) var webhooks: [Int: Webhook] = [:]
+    private(set) var webhooks: [Int: Webhook] = [:] {
+        didSet {
+            #if canImport(Combine)
+                registerWebhookListeners.send()
+            #endif
+        }
+    }
 
     /// Private initializer to enforce singleton pattern
     private init() {}
@@ -86,20 +98,19 @@ public actor ChatManager {
     #if canImport(Combine)
         /// Listenrs registered to receive updates when a new message is added
         public var messageListeners = PassthroughSubject<
-            (charoomId: Int, message: Message?), Never
+            Void, Never
         >()
 
         /// Listeners registered to receive reset events.
         /// The value returned by the listener is the chat room ID to reset. If it returns nil, then it is a global reset.
-        public var resetListeners = PassthroughSubject<Int?, Never>()
+        public var resetListeners = PassthroughSubject<Void, Never>()
 
         /// Listeners registered to receive webhook registration events.
-        /// The value returned by the listener is a tuple containing the chat room ID and the webhook URL.
         public var registerWebhookListeners = PassthroughSubject<
-            (chatroomId: Int, url: URL), Never
+            Void, Never
         >()
 
-        public var chatroomListeners = PassthroughSubject<Int, Never>()
+        public var chatroomListeners = PassthroughSubject<Void, Never>()
     #endif
 
     /// Resets the entire chat manager state to initial values.
@@ -110,7 +121,7 @@ public actor ChatManager {
         messages = [:]
         webhooks = [:]
         #if canImport(Combine)
-            resetListeners.send(nil)
+            resetListeners.send()
         #endif
     }
 
@@ -121,8 +132,7 @@ public actor ChatManager {
     public func reset(chatroomId: Int) {
         messages[chatroomId] = []
         #if canImport(Combine)
-            resetListeners.send(chatroomId)
-            messageListeners.send((chatroomId, nil))
+            resetListeners.send()
         #endif
     }
 
@@ -140,8 +150,7 @@ public actor ChatManager {
         }
         messages[chatroomId, default: []].append(message)
         #if canImport(Combine)
-            chatroomListeners.send(chatroomId)
-            messageListeners.send((chatroomId, message))
+            chatroomListeners.send()
         #endif
         return message
     }
@@ -163,7 +172,7 @@ public actor ChatManager {
         newMessage.updateCount += messages[chatroomId, default: []][index].updateCount + 1
         messages[chatroomId, default: []][index] = newMessage
         #if canImport(Combine)
-            messageListeners.send((chatroomId, newMessage))
+            messageListeners.send()
         #endif
     }
 }
@@ -181,9 +190,6 @@ extension ChatManager {
             throw WebhookError.invalidURL
         }
         webhooks[chatroomId] = Webhook(chatroomId: chatroomId, url: url)
-        #if canImport(Combine)
-            registerWebhookListeners.send((chatroomId, url))
-        #endif
     }
 
     /// Retrieves the registered webhook URL for a specific chatroom.
@@ -199,9 +205,6 @@ extension ChatManager {
         for (chatroomId, storedWebhook) in webhooks {
             if storedWebhook.id == webhook.id {
                 webhooks[chatroomId] = webhook
-                #if canImport(Combine)
-                    registerWebhookListeners.send((chatroomId, webhook.url))
-                #endif
                 return webhook
             }
         }
@@ -217,9 +220,6 @@ extension ChatManager {
         for (chatroomId, storedWebhook) in webhooks {
             if storedWebhook.id == id {
                 webhooks[chatroomId] = nil
-                #if canImport(Combine)
-                    registerWebhookListeners.send((chatroomId, storedWebhook.url))
-                #endif
                 return
             }
         }
@@ -268,7 +268,6 @@ extension ChatManager {
                 }
                 webhook.lastUpdate = Date()
                 webhooks[chatroomId] = webhook
-                registerWebhookListeners.send((chatroomId, webhook.url))
             }
         #endif
         return message
@@ -278,7 +277,7 @@ extension ChatManager {
         chatId += 1
         messages[chatId] = []
         #if canImport(Combine)
-            chatroomListeners.send(chatId)
+            chatroomListeners.send()
         #endif
         return chatId
     }
@@ -286,7 +285,7 @@ extension ChatManager {
     public func deleteChatroom(chatroomId: Int) {
         messages[chatroomId] = nil
         #if canImport(Combine)
-            chatroomListeners.send(chatroomId)
+            chatroomListeners.send()
             if let webhook = webhooks[chatroomId] {
                 deleteWebhook(id: webhook.id)
             }
@@ -339,7 +338,6 @@ extension ChatManager {
                 }
                 webhook.lastUpdate = Date()
                 webhooks[chatroomId] = webhook
-                registerWebhookListeners.send((chatroomId, webhook.url))
             }
         }
     #endif
