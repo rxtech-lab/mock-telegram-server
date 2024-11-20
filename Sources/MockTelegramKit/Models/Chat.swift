@@ -130,5 +130,6 @@ extension Message: Equatable {
         lhs.messageId == rhs.messageId && lhs.text == rhs.text && lhs.replyMarkup == rhs.replyMarkup
             && lhs.callbackQuery == rhs.callbackQuery && lhs.entities == rhs.entities
             && lhs.userId == rhs.userId && lhs.updateCount == rhs.updateCount
+            && lhs.error.debugDescription == rhs.error.debugDescription
     }
 }
