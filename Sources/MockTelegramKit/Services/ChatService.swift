@@ -10,6 +10,7 @@ import Foundation
 public enum WebhookError: LocalizedError {
     case invalidURL
     case webhookNotFound(UUID)
+    case webhookCallFailed(Error)
 
     public var errorDescription: String? {
         switch self {
@@ -17,45 +18,42 @@ public enum WebhookError: LocalizedError {
             return "Invalid webhook URL. Your URL must be a valid url string."
         case let .webhookNotFound(id):
             return "Webhook with ID \(id) not found."
+        case let .webhookCallFailed(error):
+            return "Failed to call webhook: \(error)"
         }
     }
 }
 
-func callWebhook(chatroomId _: Int, webhook: inout Webhook, update: Update) async throws {
+func callWebhook(chatroomId _: Int, webhook: Webhook, update: Update) async throws(WebhookError) {
     #if os(macOS)
         var request = URLRequest(url: webhook.url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         // Encode the update data
-        let jsonData = try JSONEncoder().encode(update)
+        guard let jsonData = try? JSONEncoder().encode(update) else {
+            throw WebhookError.webhookCallFailed(URLError(.cannotDecodeRawData))
+        }
         request.httpBody = jsonData
 
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
 
             guard let httpResponse = response as? HTTPURLResponse else {
-                webhook.lastError = "Webhook failed with status \(response)"
-                webhook.lastUpdate = Date()
-                webhook.isActive = false
-                throw URLError(.badServerResponse)
+                throw WebhookError.webhookCallFailed(URLError(.badServerResponse))
             }
 
             guard httpResponse.statusCode == 200 else {
-                webhook.lastError = "Webhook failed with status \(httpResponse.statusCode)"
-                webhook.lastUpdate = Date()
-                webhook.isActive = false
-                throw URLError(.badServerResponse)
+                throw WebhookError.webhookCallFailed(
+                    URLError(
+                        .badServerResponse,
+                        userInfo: [
+                            NSLocalizedDescriptionKey:
+                                "Unexpected status code \(httpResponse.statusCode)"
+                        ]))
             }
-
-            webhook.lastUpdate = Date()
-            webhook.lastError = nil
-            webhook.isActive = true
         } catch let error {
-            webhook.lastError = "Webhook failed with error \(error)"
-            webhook.lastUpdate = Date()
-            webhook.isActive = false
-            throw error
+            throw WebhookError.webhookCallFailed(error)
         }
     #endif
 }
@@ -247,11 +245,28 @@ extension ChatManager {
         message = addMessage(chatroomId: chatroomId, message)
         #if os(macOS)
             if var webhook = webhooks[chatroomId] {
-                try? await callWebhook(
-                    chatroomId: chatroomId, webhook: &webhook,
-                    update: Update(
-                        updateId: 0, message: message.toTelegramMessage(),
-                        callbackQuery: message.toCallbackQuery()))
+                do {
+                    try await callWebhook(
+                        chatroomId: chatroomId, webhook: webhook,
+                        update: Update(
+                            updateId: 0, message: message.toTelegramMessage(),
+                            callbackQuery: message.toCallbackQuery()))
+
+                    webhook.lastError = nil
+                    webhook.isActive = true
+                } catch {
+                    // update the webhook status
+                    webhook.lastError = error.localizedDescription
+                    webhook.isActive = false
+                    // add an error to the message
+                    // find message index
+                    if let index = messages[chatroomId]?.firstIndex(where: {
+                        $0.messageId == message.messageId
+                    }) {
+                        messages[chatroomId]?[index].error = error
+                    }
+                }
+                webhook.lastUpdate = Date()
                 webhooks[chatroomId] = webhook
                 registerWebhookListeners.send((chatroomId, webhook.url))
             }
@@ -295,16 +310,34 @@ extension ChatManager {
         public func clickOnMessageButton(
             chatroomId: Int, message: Message, button: InlineKeyboardButton
         )
-        async {
+            async
+        {
             let newMessage = Message(
-                messageId: message.messageId, text: message.text, callbackQuery: button.callbackData, userId: message.userId
+                messageId: message.messageId, text: message.text,
+                callbackQuery: button.callbackData, userId: message.userId
             )
             if var webhook = webhooks[chatroomId] {
-                try? await callWebhook(
-                    chatroomId: chatroomId, webhook: &webhook,
-                    update: Update(
-                        updateId: 0, message: newMessage.toTelegramMessage(),
-                        callbackQuery: newMessage.toCallbackQuery()))
+                do {
+                    try await callWebhook(
+                        chatroomId: chatroomId, webhook: webhook,
+                        update: Update(
+                            updateId: 0, message: newMessage.toTelegramMessage(),
+                            callbackQuery: newMessage.toCallbackQuery()))
+                    webhook.lastError = nil
+                    webhook.isActive = true
+                } catch {
+                    // update the webhook status
+                    webhook.lastError = error.localizedDescription
+                    webhook.isActive = false
+                    // add an error to the message
+                    // find message index
+                    if let index = messages[chatroomId]?.firstIndex(where: {
+                        $0.messageId == message.messageId
+                    }) {
+                        messages[chatroomId]?[index].error = error
+                    }
+                }
+                webhook.lastUpdate = Date()
                 webhooks[chatroomId] = webhook
                 registerWebhookListeners.send((chatroomId, webhook.url))
             }
