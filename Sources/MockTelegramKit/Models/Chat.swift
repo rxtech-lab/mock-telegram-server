@@ -7,6 +7,10 @@ public struct Message: Content, Sendable {
     public var callbackQuery: String?
     public var entities: [MessageEntity]?
     public var userId: Int
+    /**
+     The error that occurred when sending the message
+    */
+    public var error: LocalizedError?
 
     public var updateCount: Int = 0
 
