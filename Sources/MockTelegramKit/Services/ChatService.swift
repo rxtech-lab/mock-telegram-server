@@ -24,42 +24,39 @@ public enum WebhookError: LocalizedError {
     }
 }
 
-#if os(macOS)
-    func callWebhook(chatroomId _: Int, webhook: Webhook, update: Update) async throws(WebhookError)
-    {
-        #if os(macOS)
-            var request = URLRequest(url: webhook.url)
-            request.httpMethod = "POST"
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+func callWebhook(chatroomId _: Int, webhook: Webhook, update: Update) async throws(WebhookError) {
+    #if os(macOS)
+        var request = URLRequest(url: webhook.url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-            // Encode the update data
-            guard let jsonData = try? JSONEncoder().encode(update) else {
-                throw WebhookError.webhookCallFailed(URLError(.cannotDecodeRawData))
+        // Encode the update data
+        guard let jsonData = try? JSONEncoder().encode(update) else {
+            throw WebhookError.webhookCallFailed(URLError(.cannotDecodeRawData))
+        }
+        request.httpBody = jsonData
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw WebhookError.webhookCallFailed(URLError(.badServerResponse))
             }
-            request.httpBody = jsonData
 
-            do {
-                let (data, response) = try await URLSession.shared.data(for: request)
-
-                guard let httpResponse = response as? HTTPURLResponse else {
-                    throw WebhookError.webhookCallFailed(URLError(.badServerResponse))
-                }
-
-                guard httpResponse.statusCode == 200 else {
-                    throw WebhookError.webhookCallFailed(
-                        URLError(
-                            .badServerResponse,
-                            userInfo: [
-                                NSLocalizedDescriptionKey:
-                                    "Unexpected status code \(httpResponse.statusCode)"
-                            ]))
-                }
-            } catch let error {
-                throw WebhookError.webhookCallFailed(error)
+            guard httpResponse.statusCode == 200 else {
+                throw WebhookError.webhookCallFailed(
+                    URLError(
+                        .badServerResponse,
+                        userInfo: [
+                            NSLocalizedDescriptionKey:
+                                "Unexpected status code \(httpResponse.statusCode)"
+                        ]))
             }
-        #endif
-    }
-#endif
+        } catch let error {
+            throw WebhookError.webhookCallFailed(error)
+        }
+    #endif
+}
 
 /**
  * Manages chat-related operations including message handling and webhook management.

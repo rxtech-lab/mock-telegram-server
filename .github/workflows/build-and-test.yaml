@@ -19,7 +19,7 @@ jobs:
         os: [macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: swift-actions/setup-swift@v2
+      - run: curl -L https://swiftlang.github.io/swiftly/swiftly-install.sh | bash -s -- -y && swiftly install latest
         if: startsWith(matrix.os, 'ubuntu')
       - uses: maxim-lobanov/setup-xcode@v1
         with:
