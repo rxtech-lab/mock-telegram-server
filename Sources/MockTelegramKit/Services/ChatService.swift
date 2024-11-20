@@ -95,6 +95,22 @@ public actor ChatManager {
     /// Private initializer to enforce singleton pattern
     private init() {}
 
+    public func load(
+        messages: [Int: [Message]], webhooks: [Int: Webhook], chatId: Int, messageId: Int
+    ) {
+        self.messages = messages
+        self.webhooks = webhooks
+        self.chatId = chatId
+        self.messageId = messageId
+    }
+
+    // save the state of the chat manager
+    // @return: a tuple containing the messages, webhooks, chatId, and messageId
+    public func save() -> ([Int: [Message]], [Int: Webhook], Int, Int) {
+        return (messages, webhooks, chatId, messageId)
+
+    }
+
     #if canImport(Combine)
         /// Listenrs registered to receive updates when a new message is added
         public var messageListeners = PassthroughSubject<
