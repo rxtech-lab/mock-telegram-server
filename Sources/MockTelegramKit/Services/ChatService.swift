@@ -7,10 +7,10 @@ import Foundation
     import FoundationNetworking
 #endif
 
-public enum WebhookError: LocalizedError {
+public enum WebhookError: LocalizedError, Codable {
     case invalidURL
     case webhookNotFound(UUID)
-    case webhookCallFailed(Error)
+    case webhookCallFailed(String)  // Changed to String to store error message
 
     public var errorDescription: String? {
         switch self {
@@ -18,8 +18,59 @@ public enum WebhookError: LocalizedError {
             return "Invalid webhook URL. Your URL must be a valid url string."
         case let .webhookNotFound(id):
             return "Webhook with ID \(id) not found."
-        case let .webhookCallFailed(error):
-            return "Failed to call webhook: \(error)"
+        case let .webhookCallFailed(errorMessage):
+            return "Failed to call webhook: \(errorMessage)"
+        }
+    }
+
+    // Custom coding keys
+    private enum CodingKeys: String, CodingKey {
+        case type
+        case id
+        case errorMessage
+    }
+
+    // Custom encoding
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+
+        switch self {
+        case .invalidURL:
+            try container.encode("invalidURL", forKey: .type)
+
+        case .webhookNotFound(let id):
+            try container.encode("webhookNotFound", forKey: .type)
+            try container.encode(id, forKey: .id)
+
+        case .webhookCallFailed(let errorMessage):
+            try container.encode("webhookCallFailed", forKey: .type)
+            try container.encode(errorMessage, forKey: .errorMessage)
+        }
+    }
+
+    // Custom decoding
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let type = try container.decode(String.self, forKey: .type)
+
+        switch type {
+        case "invalidURL":
+            self = .invalidURL
+
+        case "webhookNotFound":
+            let id = try container.decode(UUID.self, forKey: .id)
+            self = .webhookNotFound(id)
+
+        case "webhookCallFailed":
+            let errorMessage = try container.decode(String.self, forKey: .errorMessage)
+            self = .webhookCallFailed(errorMessage)
+
+        default:
+            throw DecodingError.dataCorruptedError(
+                forKey: .type,
+                in: container,
+                debugDescription: "Invalid type value: \(type)"
+            )
         }
     }
 }
@@ -32,7 +83,7 @@ func callWebhook(chatroomId _: Int, webhook: Webhook, update: Update) async thro
 
         // Encode the update data
         guard let jsonData = try? JSONEncoder().encode(update) else {
-            throw WebhookError.webhookCallFailed(URLError(.cannotDecodeRawData))
+            throw WebhookError.webhookCallFailed("Failed to encode update data")
         }
         request.httpBody = jsonData
 
@@ -40,20 +91,15 @@ func callWebhook(chatroomId _: Int, webhook: Webhook, update: Update) async thro
             let (data, response) = try await URLSession.shared.data(for: request)
 
             guard let httpResponse = response as? HTTPURLResponse else {
-                throw WebhookError.webhookCallFailed(URLError(.badServerResponse))
+                throw WebhookError.webhookCallFailed("Failed to get HTTP response")
             }
 
             guard httpResponse.statusCode == 200 else {
                 throw WebhookError.webhookCallFailed(
-                    URLError(
-                        .badServerResponse,
-                        userInfo: [
-                            NSLocalizedDescriptionKey:
-                                "Unexpected status code \(httpResponse.statusCode)"
-                        ]))
+                    "Unexpected status code: \(httpResponse.statusCode)")
             }
         } catch let error {
-            throw WebhookError.webhookCallFailed(error)
+            throw WebhookError.webhookCallFailed(error.localizedDescription)
         }
     #endif
 }

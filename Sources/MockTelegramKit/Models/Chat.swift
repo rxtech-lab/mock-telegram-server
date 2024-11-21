@@ -10,7 +10,7 @@ public struct Message: Content, Sendable {
     /**
      The error that occurred when sending the message
     */
-    public var error: LocalizedError?
+    public var error: WebhookError?
 
     public var updateCount: Int = 0
 
@@ -22,6 +22,7 @@ public struct Message: Content, Sendable {
         case callbackQuery = "callback_query"
         case userId = "user_id"
         case entities
+        case error
     }
 
     public init(
