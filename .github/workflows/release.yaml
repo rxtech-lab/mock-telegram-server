@@ -15,28 +15,46 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y libjemalloc-dev && sudo apt-get install -y libcurl4-openssl-dev
+      
+      # Ubuntu-specific Swift setup
+      - name: Setup Swift on Ubuntu
         if: startsWith(matrix.os, 'ubuntu')
-      - name: Set up Swift
-        uses: swift-actions/setup-swift@v2
+        run: curl -L https://swiftlang.github.io/swiftly/swiftly-install.sh | bash -s -- -y && swiftly install latest
+      
+      # macOS-specific Swift setup
+      - name: Setup Swift on macOS
+        if: startsWith(matrix.os, 'macos')
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      
+      # Ubuntu dependencies
+      - name: Install dependencies
+        if: startsWith(matrix.os, 'ubuntu')
+        run: sudo apt-get update && sudo apt-get install -y libjemalloc-dev && sudo apt-get install -y libcurl4-openssl-dev
+      
+      # Common steps for both platforms
+      - name: Resolve Swift package dependencies
+        run: swift package resolve
+        
       - name: Build project
         run: make build
+      
+      # Upload artifacts based on platform
       - name: Upload Linux Release Asset
         uses: softprops/action-gh-release@v2
+        if: github.event_name == 'release' && matrix.os == 'ubuntu-latest'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # upload the built when os is ubuntu
-        if: github.event_name == 'release' && matrix.os == 'ubuntu-latest'
         with:
           files: |
             ../executables/mock-telegram-linux-x86_64
-      - name: Upload Linux MacOS Asset
+            
+      - name: Upload MacOS Release Asset
         uses: softprops/action-gh-release@v2
+        if: github.event_name == 'release' && matrix.os == 'macos-latest'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # upload the built when os is macos
-        if: github.event_name == 'release' && matrix.os == 'macos-latest'
         with:
           files: |
             ../executables/mock-telegram-darwin-arm64
