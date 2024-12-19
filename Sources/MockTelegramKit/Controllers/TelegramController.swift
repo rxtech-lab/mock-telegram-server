@@ -26,7 +26,7 @@ struct TelegramController: RouteCollection {
     }
 
     @Sendable
-    func sendMessage(req: Request) async throws -> SendTelegramMessageResponse {
+    func sendMessage(req: Request) async throws -> Message {
         let body = try req.content.decode(SendTelegramMessageRequest.self)
         let chatroomId = req.parameters.get("chatroomId").flatMap { Int($0) } ?? DEFAULT_CHATROOM_ID
 
@@ -34,13 +34,11 @@ struct TelegramController: RouteCollection {
         _ = await ChatManager.shared.addMessage(
             chatroomId: chatroomId, body.toMessage(userId: .BotUserId))
 
-        return SendTelegramMessageResponse(
-            ok: true
-        )
+        return body.toMessage(userId: .BotUserId)
     }
 
     @Sendable
-    func editMessagetext(req: Request) async throws -> SendTelegramMessageResponse {
+    func editMessagetext(req: Request) async throws -> Message {
         let chatroomId = req.parameters.get("chatroomId").flatMap { Int($0) } ?? DEFAULT_CHATROOM_ID
         let body = try req.content.decode(SendTelegramMessageRequest.self)
 
@@ -50,9 +48,7 @@ struct TelegramController: RouteCollection {
             chatroomId: chatroomId, id: message.messageId!,
             message: body.toMessage(userId: .BotUserId))
 
-        return SendTelegramMessageResponse(
-            ok: true
-        )
+        return message
     }
 
     @Sendable
