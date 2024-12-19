@@ -103,6 +103,7 @@ public struct SendTelegramMessageRequest: Content {
 
 public struct SendTelegramMessageResponse: Content {
     let ok: Bool
+    let result: TelegramMessage?
 }
 
 extension SendTelegramMessageRequest {
