@@ -31,11 +31,11 @@ struct TelegramController: RouteCollection {
         let chatroomId = req.parameters.get("chatroomId").flatMap { Int($0) } ?? DEFAULT_CHATROOM_ID
 
         req.logger.notice("sendMessage called with message")
-        _ = await ChatManager.shared.addMessage(
+        let addedMessage = await ChatManager.shared.addMessage(
             chatroomId: chatroomId, body.toMessage(userId: .BotUserId))
 
         return SendTelegramMessageResponse(
-            ok: true
+            ok: true, result: addedMessage.toTelegramMessage()
         )
     }
 
@@ -50,9 +50,7 @@ struct TelegramController: RouteCollection {
             chatroomId: chatroomId, id: message.messageId!,
             message: body.toMessage(userId: .BotUserId))
 
-        return SendTelegramMessageResponse(
-            ok: true
-        )
+        return SendTelegramMessageResponse(ok: true, result: message.toTelegramMessage())
     }
 
     @Sendable

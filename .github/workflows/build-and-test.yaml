@@ -16,7 +16,7 @@ jobs:
     name: Swift on ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest]
+        os: [macos-latest, ubuntu-22.04]
     runs-on: ${{ matrix.os }}
     steps:
       - run: curl -L https://swiftlang.github.io/swiftly/swiftly-install.sh | bash -s -- -y && swiftly install latest
