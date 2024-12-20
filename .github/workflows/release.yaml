@@ -43,7 +43,7 @@ jobs:
       # Upload artifacts based on platform
       - name: Upload Linux Release Asset
         uses: softprops/action-gh-release@v2
-        if: github.event_name == 'release' && matrix.os == 'ubuntu-latest'
+        if: github.event_name == 'release' && matrix.os == 'ubuntu-22.04'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
