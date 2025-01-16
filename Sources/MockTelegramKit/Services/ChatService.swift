@@ -138,8 +138,21 @@ public actor ChatManager {
         }
     }
 
+    /// Storage for chat actions, keyed by chatroom ID
+    private(set) var chatActions: [Int: String] = [:] {
+        didSet {
+            #if canImport(Combine)
+                chatroomListeners.send()
+            #endif
+        }
+    }
+
     /// Private initializer to enforce singleton pattern
     private init() {}
+
+    public func setChatAction(chatroomId: Int, chatAction: String) {
+        self.chatActions[chatroomId] = chatAction
+    }
 
     public func load(
         messages: [Int: [Message]], webhooks: [Int: Webhook], chatId: Int, messageId: Int
